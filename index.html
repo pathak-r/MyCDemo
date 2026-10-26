@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>
+try{var t=localStorage.getItem('myc-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>MyCommunity Client Portal</title>
@@ -574,6 +577,15 @@ const ic={
 const svg=(n,s=17)=>`<svg aria-hidden="true" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic[n]}</svg>`;
 
 /* ---------- nav ---------- */
+function currentTheme(){
+  const set=document.documentElement.dataset.theme;
+  if(set==='light'||set==='dark')return set;
+  return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+}
+function applyTheme(theme){
+  document.documentElement.dataset.theme=theme;
+  try{localStorage.setItem('myc-theme',theme);}catch(e){}
+}
 function renderNav(){
   const att=all().filter(x=>needsAction(x.i)).length,unread=S.threads.filter(t=>t.unread).length,nw=S.tickets.filter(t=>t.status==='new').length;
   const curMap={unit:'',lease:'landlords','new-lease':'landlords',new:''};const cur=route.name in curMap?curMap[route.name]:route.name;
@@ -592,6 +604,7 @@ function renderNav(){
       <div class="me"><span class="avatar">${r.who.split(' ').map(x=>x[0]).join('').replace('.','')}</span><span>${r.who}<small>${r.label} · Demo Properties</small></span></div>
       <label class="demo" for="viewas"><span>Demo · view as</span><select id="viewas" data-change="viewas" style="min-height:30px;padding:3px 6px;font-size:12px;background:#1E1F23;color:#E9E8E3;border-color:#3A3B40">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}" ${S.viewAs===k?'selected':''}>${v.label}</option>`).join('')}</select></label>
       <div class="demo"><span>Demo date: ${fd(TODAY)}</span><button type="button" data-action="reset">Reset demo</button></div>
+      <div class="demo"><span>Appearance</span><button type="button" data-action="theme">${currentTheme()==='dark'?'Light look':'Dark look'}</button></div>
     </div>`;
 }
 
@@ -1429,7 +1442,8 @@ const A={
     const u=free.length?free[Math.floor(Math.random()*free.length)]:S.units[0],nm=pool[Math.floor(Math.random()*pool.length)];
     const r=addRes({name:nm[0]+' '+nm[1],mobile:'5'+['0','2','5','6'][Math.floor(Math.random()*4)]+String(1000000+Math.floor(Math.random()*8999999)),unitId:u.id,since:TODAY});
     go('queue');toast(`New MyC sign-up: ${r.name} for ${u.id} · added to the queue`);},
-  reset:()=>{init();toast('Demo reset to sample data');}
+  reset:()=>{init();toast('Demo reset to sample data');},
+  theme:()=>{applyTheme(currentTheme()==='dark'?'light':'dark');render();}
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-action]');if(!el||el.disabled)return;
   if(el.tagName==='TR'&&e.target.closest('button,a,input,select,label'))return;
