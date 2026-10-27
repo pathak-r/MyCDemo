@@ -414,14 +414,14 @@ function seed(){
     {id:'v6',name:'SafeGuard Fire',trade:'Fire safety',contact:'Joel D.',mobile:'585521004'}];
   const VK={AC:'v1',HVAC:'v1','Water heater':'v2',Washer:'v2',Lift:'v4',Pump:'v5',Fire:'v6',Generator:'v3'};
   let an=1;const addA=(o)=>{const inst=2016+Math.floor(r()*8),cyc=o.kind==='AC'||o.kind==='HVAC'?180:o.kind==='Lift'?90:365;const last=addDays(TODAY,-Math.floor(r()*(cyc+40)));
-    S.assets.push({id:'A-'+pad(an++).padStart(4,'0'),...o,installed:inst,warranty:inst+(o.kind==='Lift'?10:5),last,next:addDays(last,cyc),vendorId:VK[o.kind]});};
-  S.units.forEach(u=>{
+    S.assets.push({id:'A-'+pad(an++).padStart(4,'0'),...o,installed:inst,warranty:inst+(o.kind==='Lift'?10:5),last,next:addDays(last,cyc),interval:cyc,vendorId:VK[o.kind]});};
+  S.units.forEach(u=>{if(B[u.buildingId].onboarding)return;
     const acs=u.type==='Studio'?['Split AC, living area']:u.type==='1 BR'?['Split AC, living room','Split AC, bedroom']:['Split AC, living room','Split AC, bedroom 1','Split AC, bedroom 2'];
     acs.forEach(n=>addA({name:n,kind:'AC',brand:pick(['Daikin','Gree','LG','Carrier']),buildingId:u.buildingId,unitId:u.id}));
     addA({name:'Water heater',kind:'Water heater',brand:pick(['Ariston','Rheem']),buildingId:u.buildingId,unitId:u.id});
     if(u.type!=='Studio'&&r()<0.6)addA({name:'Washing machine',kind:'Washer',brand:pick(['Bosch','Samsung','LG']),buildingId:u.buildingId,unitId:u.id});
   });
-  S.buildings.forEach(b=>{
+  S.buildings.forEach(b=>{if(b.onboarding)return;
     addA({name:'Lift 1',kind:'Lift',brand:b.id==='rg'?'Otis':'Schindler',buildingId:b.id,unitId:null});
     if(b.floors>5)addA({name:'Lift 2',kind:'Lift',brand:b.id==='rg'?'Otis':'Schindler',buildingId:b.id,unitId:null});
     addA({name:'Water pump set',kind:'Pump',brand:'Grundfos',buildingId:b.id,unitId:null});
@@ -709,10 +709,10 @@ function econCard(u){
    <dt>Margin</dt><dd class="mono" style="color:${m<0?'var(--bad)':'var(--ok)'};font-weight:500">${l?aed(m)+(inc?` · ${pct(m,inc)}%`:''):'—'}</dd></dl></section>`;
 }
 function unitAssetsCard(u){
-  const as=S.assets.filter(a=>a.unitId===u.id);
-  return `<section class="card"><div class="cardhead"><h2>Assets</h2><span class="sub">${as.length} registered</span></div>
+  const as=S.assets.filter(a=>a.unitId===u.id&&!a.retired);
+  return `<section class="card"><div class="cardhead"><h2>Assets</h2><span class="sub">${as.length} registered${can('assets')?` · <button type="button" class="link" data-action="af-new" data-unit="${u.id}">Add asset</button>`:''}</span></div>
    <div class="tablebox"><table style="min-width:560px"><thead><tr><th>Asset</th><th>Installed</th><th>Warranty</th><th>Next service</th><th>Vendor</th></tr></thead><tbody>
-   ${as.map(a=>{const nd=diff(TODAY,a.next);return `<tr><td>${esc(a.name)}<div class="muted" style="font-size:12px">${esc(a.brand)} · ${a.id}</div></td><td class="mono">${a.installed}</td><td>${a.warranty<2026?'<span class="chip plain">Expired</span>':'<span class="mono">'+a.warranty+'</span>'}</td><td class="mono" style="color:${nd<0?'var(--bad)':nd<=30?'var(--warn)':'inherit'}">${fd(a.next)}</td><td>${esc(V(a.vendorId).name)}</td></tr>`;}).join('')}
+   ${as.map(a=>{const nd=diff(TODAY,a.next);return `<tr><td>${esc(a.name)}<div class="muted" style="font-size:12px">${esc(a.brand)} · ${a.id}</div></td><td class="mono">${a.installed}</td><td>${a.warranty<2026?'<span class="chip plain">Expired</span>':'<span class="mono">'+a.warranty+'</span>'}</td><td class="mono" style="color:${nd<0?'var(--bad)':nd<=30?'var(--warn)':'inherit'}">${fd(a.next)}</td><td>${a.vendorId?esc(V(a.vendorId).name):'—'}</td></tr>`;}).join('')||'<tr><td colspan="5" class="muted">No assets registered for this unit.</td></tr>'}
    </tbody></table></div></section>`;
 }
 function residentsCard(u,c){const rs=resOf(u.id),fin=can('collections');
@@ -749,8 +749,16 @@ function vUnit(){
      <div class="tools"><button type="button" class="btn primary" data-action="moveout-confirm" data-contract="${c.id}">End contract &amp; record refund</button><button type="button" class="btn ghost" data-action="moveout-cancel">Cancel</button></div></section>`:'';
   return `<header class="pagehead"><div class="t">${crumbs}<h1>${u.id} <span class="muted" style="font-weight:400">· ${u.type}</span></h1></div><div class="tools">${tools}</div></header>
    <div class="grid2">
-    <section class="card"><div class="cardhead"><h2>Tenant</h2><span class="chip ${t.type==='company'?'info':'plain'}">${t.type==='company'?'Company':'Individual'}</span></div>
-      <dl class="kv"><dt>Name</dt><dd><b style="font-weight:600">${esc(t.name)}</b></dd><dt>Mobile</dt><dd class="mono">${fmob(t.mobile)}</dd>${t.email?`<dt>Email</dt><dd>${esc(t.email)}</dd>`:''}${t.licence?`<dt>Trade licence</dt><dd class="mono">${esc(t.licence)}</dd>`:''}</dl>
+    <section class="card"><div class="cardhead"><h2>Tenant</h2><span><span class="chip ${t.type==='company'?'info':'plain'}">${t.type==='company'?'Company':'Individual'}</span>${can('new')&&!route.tedit?` <button type="button" class="btn sm" data-action="t-edit">Edit</button>`:''}</span></div>
+      ${route.tedit?`<form id="te-form" novalidate style="display:flex;flex-direction:column;gap:14px">
+       <div class="seg" role="radiogroup" aria-label="Tenant type"><label><input type="radio" name="te-tt" value="individual" ${t.type!=='company'?'checked':''}><span>Individual</span></label><label><input type="radio" name="te-tt" value="company" ${t.type==='company'?'checked':''}><span>Company</span></label></div>
+       <div class="fields"><div class="f"><label for="te-n">Name</label><input type="text" id="te-n" value="${esc(t.name)}"></div>
+       <div class="f"><label for="te-m">Mobile number</label><div class="prefix"><span>+971</span><input type="tel" id="te-m" inputmode="numeric" value="${fmob(t.mobile).slice(5)}"></div><span class="hint">Changing it re-links the contract holder to whoever is on MyC with the new number.</span></div>
+       <div class="f"><label for="te-e">Email <span class="muted" style="font-weight:400">(optional)</span></label><input type="email" id="te-e" value="${esc(t.email||'')}"></div>
+       <div class="f"><label for="te-l">Trade licence no. <span class="muted" style="font-weight:400">(companies)</span></label><input type="text" id="te-l" value="${esc(t.licence||'')}"></div></div>
+       <div id="te-err" hidden></div>
+       <div class="tools"><button type="submit" class="btn primary sm">Save tenant details</button><button type="button" class="btn ghost sm" data-action="t-cancel">Cancel</button></div></form>`
+      :`<dl class="kv"><dt>Name</dt><dd><b style="font-weight:600">${esc(t.name)}</b></dd><dt>Mobile</dt><dd class="mono">${fmob(t.mobile)}</dd>${t.email?`<dt>Email</dt><dd>${esc(t.email)}</dd>`:''}${t.licence?`<dt>Trade licence</dt><dd class="mono">${esc(t.licence)}</dd>`:''}</dl>`}
       <div class="linkbox">${c.joined?`<span class="chip ok">On MyC</span><p>Contract holder found on MyC by mobile number. Payment and renewal reminders go to them as MyC notifications.</p>`
         :`<span class="chip warn">Not on MyC</span><p>No one has signed up with ${fmob(t.mobile)} yet. When they do, MyC recognises them as the contract holder. Until then they won't get payment reminders.</p><button type="button" class="btn sm" data-action="invite" data-contract="${c.id}">Show invite card</button><button type="button" class="btn sm ghost" data-action="join" data-contract="${c.id}">Simulate sign-up</button>`}</div></section>
     ${fin?`<section class="card"><div class="cardhead"><h2>Contract</h2><span>${c.legal!=='None'?`<span class="chip bad">${esc(c.legal)}</span> `:''}<span class="chip ok">Active</span></span></div>
@@ -774,6 +782,14 @@ function vUnit(){
    ${unitAssetsCard(u)}`;
 }
 
+function saveTenant(){
+  const c=contractFor(route.unit),n=$('te-n').value.trim(),m=$('te-m').value.replace(/\D/g,'').replace(/^971/,''),errs=[];
+  if(!n)errs.push('Enter the tenant name');if(!/^5\d{8}$/.test(m))errs.push('Enter a 9-digit UAE mobile number starting with 5');
+  const box=$('te-err');if(errs.length){box.hidden=false;box.className='errors';box.innerHTML=`<b>Fix these to save</b><ul>${errs.map(e=>`<li>${e}</li>`).join('')}</ul>`;return;}
+  const was=c.joined,oldM=c.tenant.mobile;Object.assign(c.tenant,{type:radio('te-tt'),name:n,mobile:m,email:$('te-e').value.trim(),licence:$('te-l').value.trim()});
+  linkJoined(c);audit('Updated tenant details',c.unitId);route.tedit=false;render();
+  toast(m===oldM?'Tenant details saved':c.joined?`Saved · ${first(n)} is linked to their MyC account on the new number`:(was?'Saved · no one is on MyC with the new number yet':'Saved · mobile number updated'));
+}
 /* ---------- new contract (incl. renewal) ---------- */
 function vNew(){
   const ren=route.renew?S.contracts.find(c=>c.id===route.renew):null;
@@ -1114,7 +1130,7 @@ function vMaint(){
 function waText(t){const a=t.assetId?A_(t.assetId):null,c=t.unitId?contractFor(t.unitId):null;
   return `MyCommunity job ${t.id}\n${B[t.buildingId].name}${t.unitId?', unit '+t.unitId:', common area'}\nIssue: ${t.issue}\nAsset: ${a?`${a.name} (${a.brand}, ${a.installed})`:t.assetText}\n${c?`Tenant: ${c.tenant.name}, ${fmob(c.tenant.mobile)}\n`:''}Priority: ${t.priority}\nPlease reply with your visit time.`;}
 function ticketPanel(t){
-  const assets=S.assets.filter(a=>a.buildingId===t.buildingId&&a.unitId===t.unitId);
+  const assets=S.assets.filter(a=>a.buildingId===t.buildingId&&a.unitId===t.unitId&&!a.retired);
   return `<section class="card" aria-label="Ticket ${t.id}"><div class="cardhead"><div><span class="eyebrow">${t.id} · opened ${fd(t.opened)} ${t.time}</span><h2 style="margin-top:4px">${esc(t.issue)}</h2></div><button type="button" class="closebtn" data-action="close-ticket" aria-label="Close ticket">${svg('x',16)}</button></div>
    <p style="margin:0;font-size:13.5px">${t.unitId?`<button type="button" class="link mono" data-action="open-unit" data-unit="${t.unitId}">${t.unitId}</button> · ${esc(B[t.buildingId].name)}`:esc(B[t.buildingId].name)+' · common area'}</p>
    <div class="fields" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
@@ -1129,37 +1145,127 @@ function ticketPanel(t){
 }
 
 /* ---------- assets & vendors ---------- */
+const AKINDS=['AC','Water heater','Washer','Lift','Pump','Fire','HVAC','Generator','Other'];
+const AKL={AC:'Air conditioner',Washer:'Washing machine',Pump:'Water pump',Fire:'Fire safety',HVAC:'Central AC / AHU'};
+const VKD={AC:'v1',HVAC:'v1','Water heater':'v2',Washer:'v2',Lift:'v4',Pump:'v5',Fire:'v6',Generator:'v3'};
+const live=()=>S.assets.filter(a=>!a.retired);
+function nextAssetId(){const n=Math.max(0,...S.assets.map(a=>+a.id.slice(2)))+1;return 'A-'+String(n).padStart(4,'0');}
 function asRows(){
   const q=route.aq.trim().toLowerCase();
-  return S.assets.filter(a=>(route.ab==='all'||a.buildingId===route.ab)&&(route.ak==='all'||a.kind===route.ak)&&(route.asv==='all'||(route.asv==='overdue'?a.next<TODAY:between(a.next,TODAY,addDays(TODAY,30))))&&(!q||(a.name+' '+a.brand+' '+(a.unitId||'common')+' '+a.id).toLowerCase().includes(q)));
+  return live().filter(a=>(route.ab==='all'||a.buildingId===route.ab)&&(route.ak==='all'||a.kind===route.ak)&&(route.asv==='all'||(route.asv==='overdue'?a.next<TODAY:between(a.next,TODAY,addDays(TODAY,30))))&&(!q||(a.name+' '+a.brand+' '+(a.unitId||'common')+' '+a.id).toLowerCase().includes(q)));
+}
+function afLocOpts(bid,sel){return `<option value="common" ${!sel?'selected':''}>Common area</option>`+S.units.filter(u=>u.buildingId===bid).map(u=>`<option value="${u.id}" ${sel===u.id?'selected':''}>${u.id} · ${u.type}</option>`).join('');}
+function assetForm(){
+  const a=route.aform&&route.aform!=='new'?S.assets.find(x=>x.id===route.aform):null,pu=!a&&route.afUnit?U[route.afUnit]:null;
+  const bid=a?a.buildingId:pu?pu.buildingId:(route.ab!=='all'?route.ab:'mv'),kind=a?a.kind:'AC',iv=a?a.interval||180:180,last=a&&a.last?a.last:TODAY;
+  return `<section class="card" id="af"><div class="cardhead"><h2>${a?'Edit asset · '+a.id:'Add asset'}</h2><button type="button" class="closebtn" data-action="af-close" aria-label="Close">${svg('x',16)}</button></div>
+   <form id="af-form" novalidate style="display:flex;flex-direction:column;gap:14px"><div class="fields">
+    <div class="f"><label for="af-b">Building</label><select id="af-b" data-change="af-b">${S.buildings.map(b=>`<option value="${b.id}" ${b.id===bid?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div>
+    <div class="f"><label for="af-u">Location</label><select id="af-u">${afLocOpts(bid,a?a.unitId:pu?pu.id:null)}</select></div>
+    <div class="f"><label for="af-k">Type</label><select id="af-k">${AKINDS.map(k=>`<option value="${k}" ${k===kind?'selected':''}>${AKL[k]||k}</option>`).join('')}</select></div>
+    <div class="f"><label for="af-n">Name</label><input type="text" id="af-n" value="${esc(a?a.name:'')}" placeholder="e.g. Split AC, bedroom"></div>
+    <div class="f"><label for="af-br">Brand</label><input type="text" id="af-br" value="${esc(a?a.brand:'')}" placeholder="e.g. Daikin"></div>
+    <div class="f"><label for="af-y">Install year</label><input type="number" id="af-y" min="1990" max="2030" value="${a?a.installed:2026}"></div>
+    <div class="f"><label for="af-w">Warranty ends (year)</label><input type="number" id="af-w" min="1990" max="2040" value="${a?a.warranty:2031}"></div>
+    <div class="f"><label for="af-i">Service every</label><select id="af-i">${[[90,'3 months'],[180,'6 months'],[365,'12 months']].map(([d,l])=>`<option value="${d}" ${iv===d?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="f"><label for="af-l">Last service</label><input type="date" id="af-l" value="${last}"><span class="hint" id="af-next">Next service: ${fd(addDays(last,iv))}</span></div>
+    <div class="f"><label for="af-v">Vendor</label><select id="af-v"><option value="">No vendor yet</option>${S.vendors.map(v=>`<option value="${v.id}" ${(a?a.vendorId:VKD[kind])===v.id?'selected':''}>${esc(v.name)}</option>`).join('')}</select></div></div>
+    <div id="af-err" hidden></div>
+    <div class="tools"><button type="submit" class="btn primary">${a?'Save changes':'Add asset'}</button><button type="button" class="btn ghost" data-action="af-close">Cancel</button>${a?`<span style="flex:1"></span><button type="button" class="btn" style="color:var(--bad)" data-action="af-retire" data-id="${a.id}">Retire asset</button>`:''}</div>
+   </form></section>`;
+}
+function saveAsset(){
+  const g=id=>$(id).value.trim(),name=g('af-n'),y=+g('af-y'),w=+g('af-w'),iv=+g('af-i'),last=g('af-l')||TODAY,errs=[];
+  if(!name)errs.push('Enter a name for the asset');if(!(y>=1990&&y<=2030))errs.push('Enter an install year between 1990 and 2030');if(!(w>=y))errs.push('Warranty end must be on or after the install year');
+  const box=$('af-err');if(errs.length){box.hidden=false;box.className='errors';box.innerHTML=`<b>Fix these to save</b><ul>${errs.map(e=>`<li>${e}</li>`).join('')}</ul>`;return;}
+  const loc=g('af-u'),o={buildingId:g('af-b'),unitId:loc==='common'?null:loc,kind:g('af-k'),name,brand:g('af-br')||'—',installed:y,warranty:w,interval:iv,last,next:addDays(last,iv),vendorId:g('af-v')||null};
+  if(route.aform&&route.aform!=='new'){const a=S.assets.find(x=>x.id===route.aform);Object.assign(a,o);audit(`Updated asset ${a.id} (${a.name})`,a.unitId);toast(`${a.id} saved · next service ${fd(a.next)}`);}
+  else{const a={id:nextAssetId(),...o};S.assets.push(a);audit(`Added asset ${a.id} (${a.name})`,a.unitId);toast(`${a.name} added to ${a.unitId||B[a.buildingId].short+' common area'} · ${a.id}`);}
+  route.aform=null;route.afUnit=null;render();
+}
+/* asset CSV import */
+const ACSV_COLS='building, unit, type, name, brand, install_year, warranty_year, service_every_days, vendor';
+function sampleAssetCsv(){
+  const us=S.units.filter(u=>u.buildingId==='kh'),L=['building,unit,type,name,brand,install_year,warranty_year,service_every_days,vendor'];
+  us.forEach((u,k)=>{const acs=u.type==='Studio'?['Split AC living area']:u.type==='1 BR'?['Split AC living room','Split AC bedroom']:['Split AC living room','Split AC bedroom 1','Split AC bedroom 2'];
+    acs.forEach(n=>L.push(`KH,${u.id},AC,${n},${['Daikin','Gree','LG'][k%3]},2024,2029,180,CoolTech Services`));
+    L.push(`KH,${u.id},Water heater,Water heater,${k%2?'Rheem':'Ariston'},2024,2029,365,HomeFix Maintenance`);});
+  L.push('KH,common,Lift,Lift 1,Schindler,2023,2033,90,Schindler','KH,common,Pump,Water pump set,Grundfos,2023,2028,365,AquaFlow Pumps','KH,common,Fire,Fire alarm panel,Notifier,2023,2028,365,SafeGuard Fire');
+  return L.join('\n');
+}
+function parseAssetCsv(text){
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);if(lines.length<2)return [];
+  const H=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/\s+/g,'_')),ix=k=>H.indexOf(k);
+  return lines.slice(1).map((l,n)=>{const c=l.split(',').map(x=>x.trim()),v=k=>ix(k)>=0?(c[ix(k)]||''):'';
+    const bq=v('building').toLowerCase(),b=S.buildings.find(x=>x.code.toLowerCase()===bq||x.name.toLowerCase()===bq||x.id===bq);
+    const uq=v('unit').toUpperCase(),unit=uq==='COMMON'||uq===''?null:(U[uq]||(b&&U[b.code+'-'+uq.padStart(4,'0')])||null);
+    const kind=AKINDS.find(k=>k.toLowerCase()===v('type').toLowerCase())||(v('type')?'Other':''),vend=S.vendors.find(x=>x.name.toLowerCase()===v('vendor').toLowerCase());
+    const y=+v('install_year')||null,w=+v('warranty_year')||null,iv=[90,180,365].includes(+v('service_every_days'))?+v('service_every_days'):(kind==='Lift'?90:kind==='AC'||kind==='HVAC'?180:365);
+    const probs=[];if(!b)probs.push('building not found');if(uq&&uq!=='COMMON'&&!unit)probs.push('unit not found');if(unit&&b&&unit.buildingId!==b.id)probs.push('unit is in another building');if(!kind)probs.push('type missing');if(!v('name'))probs.push('name missing');if(y&&(y<1990||y>2030))probs.push('install year looks wrong');
+    return {line:n+2,b,unit,kind,name:v('name'),brand:v('brand')||'—',y:y||2026,w:w||(y||2026)+5,iv,vendorId:vend?vend.id:(VKD[kind]||null),vendorName:vend?vend.name:(v('vendor')?v('vendor')+' (not in vendor list)':''),probs};});
+}
+function assetImportCard(){
+  const rows=route.aimpRows,ok=rows?rows.filter(r=>!r.probs.length):[];
+  return `<section class="card" id="ai"><div class="cardhead"><h2>Import assets from a spreadsheet</h2><button type="button" class="closebtn" data-action="ai-close" aria-label="Close">${svg('x',16)}</button></div>
+   <div class="drop"><p>Upload a CSV with the columns <span class="mono">${ACSV_COLS}</span>. Unit can be the full code (KH-0101), the apartment number (0101) or <span class="mono">common</span>. Next service is set from today and the service interval.</p>
+    <label class="btn filebtn">Upload CSV<input type="file" accept=".csv,text/csv" data-change="ai-file" id="ai-file"></label><button type="button" class="btn primary" data-action="ai-sample">Load sample: Khalidiya Heights</button></div>
+   ${rows?`<div class="tablebox" style="max-height:380px;overflow:auto"><table style="min-width:900px"><thead><tr><th>Line</th><th>Location</th><th>Type</th><th>Name</th><th>Brand</th><th>Installed</th><th>Warranty</th><th>Service</th><th>Vendor</th><th>Check</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td class="mono muted">${r.line}</td><td class="mono">${r.unit?r.unit.id:r.b?esc(r.b.short)+' · common':'—'}</td><td>${esc(AKL[r.kind]||r.kind)}</td><td>${esc(r.name)}</td><td>${esc(r.brand)}</td><td class="mono">${r.y}</td><td class="mono">${r.w}</td><td>every ${r.iv===90?'3':r.iv===180?'6':'12'} mo</td><td style="font-size:12.5px">${esc(r.vendorName||'—')}</td><td>${r.probs.length?`<span class="chip bad">${esc(r.probs.join(', '))}</span>`:'<span class="chip ok">Ready</span>'}</td></tr>`).join('')}</tbody></table></div>
+    <div class="tools"><button type="button" class="btn primary" data-action="ai-apply" ${ok.length?'':'disabled'}>Import ${ok.length} asset${ok.length===1?'':'s'}</button><button type="button" class="btn ghost" data-action="ai-clear">Discard</button><span class="foot">${rows.length-ok.length?`${rows.length-ok.length>1?(rows.length-ok.length)+' rows need':'1 row needs'} fixing and will be skipped`:'All rows ready'}</span></div>`:''}</section>`;
 }
 function vAssets(){
   if(route.atab==='vendors')return vVendors();
-  const kinds=[...new Set(S.assets.map(a=>a.kind))];
-  const od=S.assets.filter(a=>a.next<TODAY).length,soon=S.assets.filter(a=>between(a.next,TODAY,addDays(TODAY,30))).length;
-  return `<header class="pagehead"><div class="t"><span class="eyebrow">Assets &amp; vendors</span><h1>Asset register</h1><span class="muted">${S.assets.length} assets · <span style="color:var(--bad)">${od} service overdue</span> · ${soon} due in 30 days</span></div></header>
+  const L=live(),kinds=[...new Set(L.map(a=>a.kind))];
+  const od=L.filter(a=>a.next<TODAY).length,soon=L.filter(a=>between(a.next,TODAY,addDays(TODAY,30))).length,ret=S.assets.length-L.length;
+  return `<header class="pagehead"><div class="t"><span class="eyebrow">Assets &amp; vendors</span><h1>Asset register</h1><span class="muted">${L.length} assets · <span style="color:var(--bad)">${od} service overdue</span> · ${soon} due in 30 days${ret?` · ${ret} retired`:''}</span></div>
+    <div class="tools"><button type="button" class="btn" data-action="ai-open">Import CSV</button><button type="button" class="btn primary" data-action="af-new">${svg('plus',16)}Add asset</button></div></header>
    ${tabsHtml([['assets','Assets'],['vendors','Vendors']],'assets','atab')}
+   ${route.aform?assetForm():''}${route.aimpOpen?assetImportCard():''}
    <div class="tools"><label class="field-inline" for="as-q">Search<input type="search" id="as-q" value="${esc(route.aq)}" placeholder="Asset, brand or unit" style="width:200px"></label>${bldSelect('as-building',route.ab)}
-    <label class="field-inline" for="as-kind">Type<select id="as-kind" data-change="as-kind"><option value="all">All types</option>${kinds.map(k=>`<option ${route.ak===k?'selected':''}>${k}</option>`).join('')}</select></label>
+    <label class="field-inline" for="as-kind">Type<select id="as-kind" data-change="as-kind"><option value="all">All types</option>${kinds.map(k=>`<option value="${k}" ${route.ak===k?'selected':''}>${AKL[k]||k}</option>`).join('')}</select></label>
     <label class="field-inline" for="as-svc">Service<select id="as-svc" data-change="as-svc"><option value="all">Any</option><option value="overdue" ${route.asv==='overdue'?'selected':''}>Overdue</option><option value="soon" ${route.asv==='soon'?'selected':''}>Due in 30 days</option></select></label></div>
    <div id="as-body"></div>`;
 }
 function fillAssets(){
   const el=$('as-body');if(!el)return;const xs=asRows(),shown=xs.slice(0,route.alimit);
-  el.innerHTML=`<section class="card" style="padding-top:8px;padding-bottom:8px"><div class="tablebox"><table style="min-width:940px"><thead><tr><th>Asset</th><th>Location</th><th>Installed</th><th>Warranty</th><th>Last service</th><th>Next service</th><th>Vendor</th><th class="r">Open tickets</th></tr></thead><tbody>
-   ${shown.map(a=>{const nd=diff(TODAY,a.next),ot=S.tickets.filter(t=>t.assetId===a.id&&t.status!=='resolved').length;return `<tr><td>${esc(a.name)}<div class="muted" style="font-size:12px">${esc(a.brand)} · <span class="mono">${a.id}</span></div></td>
+  el.innerHTML=`<section class="card" style="padding-top:8px;padding-bottom:8px"><div class="tablebox"><table style="min-width:1000px"><thead><tr><th>Asset</th><th>Location</th><th>Installed</th><th>Warranty</th><th>Last service</th><th>Next service</th><th>Vendor</th><th class="r">Open tickets</th><th><span class="sr">Edit</span></th></tr></thead><tbody>
+   ${shown.map(a=>{const nd=diff(TODAY,a.next),ot=S.tickets.filter(t=>t.assetId===a.id&&t.status!=='resolved').length;return `<tr class="${route.aform===a.id?'cur':''}"><td>${esc(a.name)}<div class="muted" style="font-size:12px">${esc(a.brand)} · <span class="mono">${a.id}</span></div></td>
     <td>${a.unitId?`<button type="button" class="namebtn mono" data-action="open-unit" data-unit="${a.unitId}">${a.unitId}</button>`:esc(B[a.buildingId].short)+' · common'}</td><td class="mono">${a.installed}</td><td>${a.warranty<2026?'<span class="chip plain">Expired</span>':'<span class="mono">to '+a.warranty+'</span>'}</td>
-    <td class="mono" style="font-size:12.5px">${fd(a.last)}</td><td class="mono" style="font-size:12.5px;color:${nd<0?'var(--bad)':nd<=30?'var(--warn)':'inherit'}">${fd(a.next)}${nd<0?' · overdue':''}</td><td>${esc(V(a.vendorId).name)}</td><td class="r">${ot?`<span class="chip bad">${ot}</span>`:'<span class="muted">—</span>'}</td></tr>`;}).join('')||'<tr><td colspan="8" class="muted" style="padding:28px 8px;text-align:center">No assets match.</td></tr>'}
+    <td class="mono" style="font-size:12.5px">${a.last?fd(a.last):'<span class="muted">Not recorded</span>'}</td><td class="mono" style="font-size:12.5px;color:${nd<0?'var(--bad)':nd<=30?'var(--warn)':'inherit'}">${fd(a.next)}${nd<0?' · overdue':''}</td><td>${a.vendorId?esc(V(a.vendorId).name):'<span class="muted">None</span>'}</td><td class="r">${ot?`<span class="chip bad">${ot}</span>`:'<span class="muted">—</span>'}</td>
+    <td class="r"><button type="button" class="btn sm" data-action="af-edit" data-id="${a.id}">Edit</button></td></tr>`;}).join('')||'<tr><td colspan="9" class="muted" style="padding:28px 8px;text-align:center">No assets match.</td></tr>'}
    </tbody></table></div></section>
    <div class="tools"><span class="foot">Showing ${shown.length} of ${xs.length}</span>${xs.length>shown.length?`<button type="button" class="btn sm" data-action="as-more">Show all ${xs.length}</button>`:''}</div>`;
 }
+/* vendors */
+const TRADES=['AC & HVAC','Plumbing & appliances','Electrical','Lifts','Water & pumps','Fire safety','Cleaning','Pest control','Painting & civil','General maintenance'];
+function vendorForm(){
+  const v=route.vform&&route.vform!=='new'?V(route.vform):null;
+  return `<section class="card" id="vf"><div class="cardhead"><h2>${v?'Edit vendor':'Add vendor'}</h2><button type="button" class="closebtn" data-action="vf-close" aria-label="Close">${svg('x',16)}</button></div>
+   <form id="vf-form" novalidate style="display:flex;flex-direction:column;gap:14px"><div class="fields">
+    <div class="f"><label for="vf-n">Company name</label><input type="text" id="vf-n" value="${esc(v?v.name:'')}" placeholder="e.g. Al Noor Technical Services"></div>
+    <div class="f"><label for="vf-t">Trade</label><input type="text" id="vf-t" list="vf-trades" value="${esc(v?v.trade:'')}" placeholder="e.g. Plumbing"><datalist id="vf-trades">${TRADES.map(t=>`<option value="${esc(t)}"></option>`).join('')}</datalist></div>
+    <div class="f"><label for="vf-c">Contact person</label><input type="text" id="vf-c" value="${esc(v?v.contact:'')}"></div>
+    <div class="f"><label for="vf-m">WhatsApp number</label><div class="prefix"><span>+971</span><input type="tel" id="vf-m" inputmode="numeric" value="${v?fmob(v.mobile).slice(5):''}" placeholder="50 123 4567"></div><span class="hint">Maintenance jobs open in WhatsApp with this number, ready to send.</span></div></div>
+    <div id="vf-err" hidden></div>
+    <div class="tools"><button type="submit" class="btn primary">${v?'Save changes':'Add vendor'}</button><button type="button" class="btn ghost" data-action="vf-close">Cancel</button></div></form></section>`;
+}
+function saveVendor(){
+  const n=$('vf-n').value.trim(),t=$('vf-t').value.trim(),c=$('vf-c').value.trim(),m=$('vf-m').value.replace(/\D/g,'').replace(/^971/,''),errs=[];
+  if(!n)errs.push('Enter the company name');if(!t)errs.push('Enter the trade');if(!/^5\d{8}$/.test(m))errs.push('Enter a 9-digit UAE mobile number starting with 5');
+  const box=$('vf-err');if(errs.length){box.hidden=false;box.className='errors';box.innerHTML=`<b>Fix these to save</b><ul>${errs.map(e=>`<li>${e}</li>`).join('')}</ul>`;return;}
+  if(route.vform!=='new'){const v=V(route.vform);Object.assign(v,{name:n,trade:t,contact:c||'—',mobile:m});audit(`Updated vendor ${n}`);toast(`${n} saved`);}
+  else{const v={id:'v'+(S.vendors.length+1)+'_'+(S.seq++),name:n,trade:t,contact:c||'—',mobile:m};S.vendors.push(v);audit(`Added vendor ${n}`);toast(`${n} added. You can now assign them to tickets and assets.`);}
+  route.vform=null;render();
+}
 function vVendors(){
-  return `<header class="pagehead"><div class="t"><span class="eyebrow">Assets &amp; vendors</span><h1>Approved vendors</h1><span class="muted">${S.vendors.length} vendors · jobs are forwarded on WhatsApp from each ticket</span></div></header>
+  return `<header class="pagehead"><div class="t"><span class="eyebrow">Assets &amp; vendors</span><h1>Approved vendors</h1><span class="muted">${S.vendors.length} vendors · jobs are forwarded on WhatsApp from each ticket</span></div>
+    <div class="tools"><button type="button" class="btn primary" data-action="vf-new">${svg('plus',16)}Add vendor</button></div></header>
    ${tabsHtml([['assets','Assets'],['vendors','Vendors']],'vendors','atab')}
+   ${route.vform?vendorForm():''}
    <div style="display:flex;flex-direction:column;gap:10px">${S.vendors.map(v=>{const jobs=S.tickets.filter(t=>t.vendorId===v.id),open=jobs.filter(t=>t.status!=='resolved');
-    return `<details class="vend"><summary><div class="grow"><b style="font-weight:600">${esc(v.name)}</b><span class="muted" style="font-size:13px">${esc(v.trade)} · ${esc(v.contact)} · WhatsApp <span class="mono">${fmob(v.mobile)}</span></span></div>
-     <span class="chip ${open.length?'warn':'plain'}">${open.length} open</span><span class="muted" style="font-size:13px">${jobs.length-open.length} completed · avg ${avgClose(jobs)} days</span><span class="muted" style="font-size:13px">${S.assets.filter(a=>a.vendorId===v.id).length} assets</span></summary>
-     <div class="body">${jobs.length?`<div class="tablebox" style="margin:0;padding:0"><table style="min-width:560px"><thead><tr><th>Ticket</th><th>Issue</th><th>Location</th><th>Opened</th><th>Status</th></tr></thead><tbody>${jobs.map(t=>`<tr><td class="mono"><button type="button" class="namebtn mono" data-action="open-ticket" data-id="${t.id}">${t.id}</button></td><td>${esc(t.issue)}</td><td>${t.unitId||esc(B[t.buildingId].short)+' · common'}</td><td class="mono" style="font-size:12.5px">${fd(t.opened)}</td><td><span class="chip ${TKST[t.status][1]}">${TKST[t.status][0]}</span>${t.closed?` <span class="muted" style="font-size:12px">${tkAge(t)}</span>`:''}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">No jobs yet.</p>'}</div></details>`;}).join('')}</div>`;
+    return `<details class="vend" ${route.vopen===v.id?'open':''}><summary><div class="grow"><b style="font-weight:600">${esc(v.name)}</b><span class="muted" style="font-size:13px">${esc(v.trade)} · ${esc(v.contact)} · WhatsApp <span class="mono">${fmob(v.mobile)}</span></span></div>
+     <span class="chip ${open.length?'warn':'plain'}">${open.length} open</span><span class="muted" style="font-size:13px">${jobs.length-open.length} completed · avg ${avgClose(jobs)} days</span><span class="muted" style="font-size:13px">${live().filter(a=>a.vendorId===v.id).length} assets</span></summary>
+     <div class="body"><div class="tools" style="justify-content:flex-end;margin:6px 0 8px"><button type="button" class="btn sm" data-action="vf-edit" data-id="${v.id}">Edit vendor</button></div>${jobs.length?`<div class="tablebox" style="margin:0;padding:0"><table style="min-width:560px"><thead><tr><th>Ticket</th><th>Issue</th><th>Location</th><th>Opened</th><th>Status</th></tr></thead><tbody>${jobs.map(t=>`<tr><td class="mono"><button type="button" class="namebtn mono" data-action="open-ticket" data-id="${t.id}">${t.id}</button></td><td>${esc(t.issue)}</td><td>${t.unitId||esc(B[t.buildingId].short)+' · common'}</td><td class="mono" style="font-size:12.5px">${fd(t.opened)}</td><td><span class="chip ${TKST[t.status][1]}">${TKST[t.status][0]}</span>${t.closed?` <span class="muted" style="font-size:12px">${tkAge(t)}</span>`:''}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted" style="margin:0">No jobs yet.</p>'}</div></details>`;}).join('')}</div>`;
 }
 
 /* ---------- reports ---------- */
@@ -1359,7 +1465,7 @@ let tt;function toast(m){const el=$('toast');el.textContent=m;el.hidden=false;el
 /* ---------- router ---------- */
 function go(name,p={}){
   if(!can(name)){toast(`${ROLES[S.viewAs].label} can't open that section`);return;}
-  route={...route,name,renew:null,fromRes:null,moveout:false,...p};if(name!=='collections')sel.clear();$('phone').hidden=true;render();window.scrollTo(0,0);}
+  route={...route,name,renew:null,fromRes:null,moveout:false,tedit:false,aform:null,afUnit:null,aimpOpen:false,aimpRows:null,vform:null,...p};if(name!=='collections')sel.clear();$('phone').hidden=true;render();window.scrollTo(0,0);}
 function render(){
   renderNav();const w=document.querySelector('#main .wrap');
   const banner=S.viewAs!=='manager'?`<div class="banner"><span>Viewing as <b>${ROLES[S.viewAs].label}</b> (${ROLES[S.viewAs].who}). Sections this role can't access are hidden.</span><button type="button" class="btn sm" data-action="viewas-reset">Back to portfolio manager</button></div>`:'';
@@ -1434,6 +1540,21 @@ const A={
     audit(`Ended contract for ${c.tenant.name} · deposit refund ${aed(refund)}`,c.unitId);route.moveout=false;render();toast(`Contract ended · ${aed(refund)} deposit refund recorded · ${c.unitId} is now vacant`);},
   'viewas-reset':()=>{S.viewAs='manager';render();},
   restab:d=>{route.restab=d.tab;render();},
+  'af-new':d=>{const o={atab:'assets',aform:'new',afUnit:d.unit||null,aimpOpen:false};if(route.name!=='assets')go('assets',o);else{Object.assign(route,o);render();}setTimeout(()=>{const f=$('af');if(f)f.scrollIntoView({block:'start'});const n=$('af-n');if(n)n.focus();},30);},
+  'af-edit':d=>{route.aform=d.id;route.afUnit=null;route.aimpOpen=false;render();setTimeout(()=>{const f=$('af');if(f)f.scrollIntoView({block:'start'});},30);},
+  'af-close':()=>{route.aform=null;route.afUnit=null;render();},
+  'af-retire':d=>{const a=S.assets.find(x=>x.id===d.id);a.retired=true;route.aform=null;S.tickets.forEach(t=>{if(t.assetId===a.id&&t.status==='resolved'){}});audit(`Retired asset ${a.id} (${a.name})`,a.unitId);toast(`${a.name} (${a.id}) retired. Its history stays in past tickets.`);render();},
+  'ai-open':()=>{route.aimpOpen=true;route.aform=null;render();},
+  'ai-close':()=>{route.aimpOpen=false;route.aimpRows=null;render();},
+  'ai-sample':()=>{route.aimpRows=parseAssetCsv(sampleAssetCsv());render();},
+  'ai-clear':()=>{route.aimpRows=null;render();},
+  'ai-apply':()=>{const ok=route.aimpRows.filter(r=>!r.probs.length);ok.forEach(r=>S.assets.push({id:nextAssetId(),buildingId:r.b.id,unitId:r.unit?r.unit.id:null,kind:r.kind,name:r.name,brand:r.brand,installed:r.y,warranty:r.w,interval:r.iv,last:null,next:addDays(TODAY,r.iv),vendorId:r.vendorId}));
+    audit(`Imported ${ok.length} assets from CSV`);route.aimpRows=null;route.aimpOpen=false;const b=ok[0]&&ok[0].b;if(b)route.ab=b.id;render();toast(`Imported ${ok.length} assets${b?' into '+b.name:''}`);},
+  'vf-new':()=>{route.vform='new';render();setTimeout(()=>{const n=$('vf-n');if(n)n.focus();},30);},
+  'vf-edit':d=>{route.vform=d.id;route.vopen=d.id;render();setTimeout(()=>{const f=$('vf');if(f)f.scrollIntoView({block:'start'});},30);},
+  'vf-close':()=>{route.vform=null;render();},
+  't-edit':()=>{route.tedit=true;render();setTimeout(()=>{const n=$('te-n');if(n)n.focus();},30);},
+  't-cancel':()=>{route.tedit=false;render();},
   'nc-doc-rm':d=>{form.docs[d.slot].splice(+d.k,1);updateForm();},
   'res-create':d=>{const r=S.residents.find(x=>x.id===d.id);go('new',{unit:r.unitId,fromRes:r.id});},
   'res-remove':d=>{const r=S.residents.find(x=>x.id===d.id);S.residents=S.residents.filter(x=>x!==r);const c=contractFor(r.unitId);if(c)linkJoined(c);audit(`Removed ${r.name} from ${r.unitId} in MyC`,r.unitId);toast(`${r.name} removed from ${r.unitId}. They no longer see the building in MyC.`);render();},
@@ -1461,7 +1582,9 @@ document.addEventListener('change',e=>{const el=e.target,k=el.dataset&&el.datase
     'tk-pri':()=>{const t=tk(id);t.priority=el.value;audit(`${t.id} priority → ${el.value}`,t.unitId);render();},
     'tk-vendor':()=>{const t=tk(id);t.vendorId=el.value||null;t.wa=false;if(t.vendorId)t.timeline.push({at:fd(TODAY)+' '+nowHM(),text:'Vendor set to '+V(t.vendorId).name});audit(`${t.id} vendor → ${t.vendorId?V(t.vendorId).name:'unassigned'}`,t.unitId);render();},
     'tk-asset':()=>{const t=tk(id);t.assetId=el.value||null;render();},
-    'ib-to':()=>{route.ibTo=el.value;},'res-building':()=>{route.resb=el.value;render();},
+    'ib-to':()=>{route.ibTo=el.value;},
+    'af-b':()=>{$('af-u').innerHTML=afLocOpts(el.value,null);},
+    'ai-file':()=>{const f=el.files[0];if(!f)return;f.text().then(t=>{const rows=parseAssetCsv(t);if(!rows.length){toast('No rows found. The first line must be the column names.');return;}route.aimpRows=rows;render();});},'res-building':()=>{route.resb=el.value;render();},
     'ib-new':()=>{if(!el.value)return;thread(el.value,true);route.thread=el.value;render();const t=$('ib-text');if(t)t.focus();},
     viewas:()=>{S.viewAs=el.value;if(!can(route.name))route={...route,name:'overview'};render();toast('Viewing as '+ROLES[S.viewAs].label);},
     'mem-role':()=>{const m=S.members[+el.dataset.k];m.role=el.value;audit(`Changed ${m.name}'s role to ${ROLES[el.value].label}`);toast(`${m.name} is now ${ROLES[el.value].label}`);},
@@ -1476,16 +1599,20 @@ document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='col-q'){route.q=t.value;fillCollections();}
   else if(t.id==='as-q'){route.aq=t.value;fillAssets();}
   else if(t.id==='ib-text'&&route.thread){drafts[route.thread]=t.value;}
+  else if(t.id==='af-l'||t.id==='af-i'){const l=$('af-l').value||TODAY;$('af-next').textContent='Next service: '+fd(addDays(l,+$('af-i').value));}
   else if(t.id==='mo-ded'){const c=contractFor(route.unit);if(c)$('mo-refund').textContent=aed(Math.max(0,c.deposit-(+t.value||0)));}
 });
 document.addEventListener('submit',e=>{
+  if(e.target.id==='af-form'){e.preventDefault();saveAsset();return;}
+  if(e.target.id==='vf-form'){e.preventDefault();saveVendor();return;}
+  if(e.target.id==='te-form'){e.preventDefault();saveTenant();return;}
   if(e.target.id==='ib-form'){e.preventDefault();if(!route.thread){const f=S.threads.slice().sort((a,b)=>b.ts-a.ts)[0];if(f)route.thread=f.unitId;}sendMsg();}
   if(e.target.id==='inv-form'){e.preventDefault();const n=$('inv-name').value.trim(),em=$('inv-email').value.trim();if(!n||!em){toast('Enter a name and work email to invite');return;}S.members.push({name:n,email:em,role:$('inv-role').value,status:'Invited'});audit(`Invited ${n} as ${ROLES[$('inv-role').value].label}`);render();toast('Invite sent to '+em);}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('phone').hidden)$('phone').hidden=true;
   if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)&&e.target.id==='ib-text'){e.preventDefault();sendMsg();}});
 function init(){seed();sel.clear();stmt=null;imp=null;drafts={};typing=null;
-  route={name:'overview',building:'all',unit:null,tab:'attn',cb:'all',q:'',renew:null,lease:null,thread:null,mtab:'open',mb:'all',ticket:null,atab:'assets',ab:'all',ak:'all',aq:'',asv:'all',alimit:60,rtab:'aging',rb:'all',pb:'mv',stab:'team',moveout:false,restab:'all',resb:'all',fromRes:null,ibTo:'holder'};
+  route={name:'overview',building:'all',unit:null,tab:'attn',cb:'all',q:'',renew:null,lease:null,thread:null,mtab:'open',mb:'all',ticket:null,atab:'assets',ab:'all',ak:'all',aq:'',asv:'all',alimit:60,rtab:'aging',rb:'all',pb:'mv',stab:'team',moveout:false,restab:'all',resb:'all',fromRes:null,ibTo:'holder',aform:null,afUnit:null,aimpOpen:false,aimpRows:null,vform:null,vopen:null,tedit:false};
   $('phone').hidden=true;render();}
 init();
 </script>
