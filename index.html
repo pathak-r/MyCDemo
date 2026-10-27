@@ -2,9 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<script>
-try{var t=localStorage.getItem('myc-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}
-</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>MyCommunity Client Portal</title>
@@ -38,7 +35,6 @@ try{var t=localStorage.getItem('myc-theme');if(t==='light'||t==='dark')document.
   color-scheme:dark}
 
 html,body{height:100%;margin:0}
-img{max-width:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -398,14 +394,14 @@ function seed(){
       const d=diff(i.due,TODAY);
       if(i.method==='cheque'){i.status=d>5?'cleared':(d>=1?'deposited':'held');}
       else{i.status=d>0?((d<40&&r()<0.35)?'due':'paid'):'due';}
-      if(i.status!=='cleared'&&i.status!=='paid'&&d>=-7&&d<=0)i.reminders.push({at:addDays(i.due,-7),channel:c.joined?'MyC push':'SMS',auto:true});
-      if(i.method==='transfer'&&i.status==='due'&&d>0)i.reminders.push({at:addDays(i.due,3),channel:c.joined?'MyC push':'SMS',auto:true});
+      if(c.joined&&i.status!=='cleared'&&i.status!=='paid'&&d>=-7&&d<=0)i.reminders.push({at:addDays(i.due,-7),channel:'MyC',auto:true});
+      if(c.joined&&i.method==='transfer'&&i.status==='due'&&d>0)i.reminders.push({at:addDays(i.due,3),channel:'MyC',auto:true});
     });
     if(diff(TODAY,c.end)<=60)c.renewal=pick(['Not contacted','Not contacted','Reminder sent','Renewing','Moving out']);
     S.contracts.push(c);
   });
   const cand=S.contracts.flatMap(c=>c.installments.filter(i=>i.method==='cheque'&&i.status==='cleared'&&between(i.due,addDays(TODAY,-28),addDays(TODAY,-6))));
-  [0,3,7].forEach(n=>{const i=cand[n%Math.max(cand.length,1)];if(i){i.status='bounced';i.reminders.push({at:addDays(i.due,4),channel:'MyC push',auto:false});}});
+  [0,3,7].forEach(n=>{const i=cand[n%Math.max(cand.length,1)];if(i){i.status='bounced';i.reminders.push({at:addDays(i.due,4),channel:'MyC',auto:false});}});
   const bc=S.contracts.find(c=>c.installments.some(i=>i.status==='bounced'));if(bc){bc.joined=true;bc.legal='Notice served';}
 
   /* vendors & assets */
@@ -577,15 +573,6 @@ const ic={
 const svg=(n,s=17)=>`<svg aria-hidden="true" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic[n]}</svg>`;
 
 /* ---------- nav ---------- */
-function currentTheme(){
-  const set=document.documentElement.dataset.theme;
-  if(set==='light'||set==='dark')return set;
-  return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
-}
-function applyTheme(theme){
-  document.documentElement.dataset.theme=theme;
-  try{localStorage.setItem('myc-theme',theme);}catch(e){}
-}
 function renderNav(){
   const att=all().filter(x=>needsAction(x.i)).length,unread=S.threads.filter(t=>t.unread).length,nw=S.tickets.filter(t=>t.status==='new').length;
   const curMap={unit:'',lease:'landlords','new-lease':'landlords',new:''};const cur=route.name in curMap?curMap[route.name]:route.name;
@@ -604,7 +591,6 @@ function renderNav(){
       <div class="me"><span class="avatar">${r.who.split(' ').map(x=>x[0]).join('').replace('.','')}</span><span>${r.who}<small>${r.label} · Demo Properties</small></span></div>
       <label class="demo" for="viewas"><span>Demo · view as</span><select id="viewas" data-change="viewas" style="min-height:30px;padding:3px 6px;font-size:12px;background:#1E1F23;color:#E9E8E3;border-color:#3A3B40">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}" ${S.viewAs===k?'selected':''}>${v.label}</option>`).join('')}</select></label>
       <div class="demo"><span>Demo date: ${fd(TODAY)}</span><button type="button" data-action="reset">Reset demo</button></div>
-      <div class="demo"><span>Appearance</span><button type="button" data-action="theme">${currentTheme()==='dark'?'Light look':'Dark look'}</button></div>
     </div>`;
 }
 
@@ -742,7 +728,7 @@ function vUnit(){
   const tix=S.tickets.filter(x=>x.unitId===u.id&&x.status!=='resolved');
   if(!c){const last=S.contracts.filter(x=>x.unitId===u.id&&x.status!=='active').pop();
     return `<header class="pagehead"><div class="t">${crumbs}<h1>${u.id} <span class="muted" style="font-weight:400">· ${u.type}</span></h1></div></header>
-    <section class="card" style="align-items:flex-start"><span class="chip plain">Vacant</span><h2 style="font-size:18px">No active contract on this unit</h2><p class="muted" style="margin:0">Create a contract to add the tenant, generate the payment schedule and send them a MyC invite.</p>
+    <section class="card" style="align-items:flex-start"><span class="chip plain">Vacant</span><h2 style="font-size:18px">No active contract on this unit</h2><p class="muted" style="margin:0">Create a contract to add the tenant and generate the payment schedule. You'll get an invite card to hand them so they join MyC.</p>
     ${last&&last.movedOut?`<p style="margin:0;font-size:13.5px">Last tenancy: <b>${esc(last.tenant.name)}</b>, moved out ${fd(last.movedOut.date)}. Deposit ${aed(last.deposit)}, deductions ${aed(last.movedOut.ded)}${last.movedOut.reason?` (${esc(last.movedOut.reason)})`:''}, refunded <b>${aed(last.movedOut.refund)}</b>.</p>`:''}
     ${can('new')?`<button type="button" class="btn primary" data-action="new-contract" data-unit="${u.id}">${svg('plus',16)}New contract for ${u.id}</button>`:''}</section>
     ${residentsCard(u,null)}${fin?econCard(u):''}${unitAssetsCard(u)}${tix.length?maintCard(tix,'Open maintenance on this unit'):''}`;}
@@ -766,7 +752,7 @@ function vUnit(){
     <section class="card"><div class="cardhead"><h2>Tenant</h2><span class="chip ${t.type==='company'?'info':'plain'}">${t.type==='company'?'Company':'Individual'}</span></div>
       <dl class="kv"><dt>Name</dt><dd><b style="font-weight:600">${esc(t.name)}</b></dd><dt>Mobile</dt><dd class="mono">${fmob(t.mobile)}</dd>${t.email?`<dt>Email</dt><dd>${esc(t.email)}</dd>`:''}${t.licence?`<dt>Trade licence</dt><dd class="mono">${esc(t.licence)}</dd>`:''}</dl>
       <div class="linkbox">${c.joined?`<span class="chip ok">On MyC</span><p>Contract holder found on MyC by mobile number. Payment and renewal reminders go to them as MyC notifications.</p>`
-        :`<span class="chip warn">Not on MyC</span><p>No one has signed up with ${fmob(t.mobile)} yet. When they do, MyC recognises them as the contract holder. Until then, reminders go by SMS.</p><button type="button" class="btn sm" data-action="invite" data-contract="${c.id}">Resend invite</button><button type="button" class="btn sm ghost" data-action="join" data-contract="${c.id}">Simulate sign-up</button>`}</div></section>
+        :`<span class="chip warn">Not on MyC</span><p>No one has signed up with ${fmob(t.mobile)} yet. When they do, MyC recognises them as the contract holder. Until then they won't get payment reminders.</p><button type="button" class="btn sm" data-action="invite" data-contract="${c.id}">Show invite card</button><button type="button" class="btn sm ghost" data-action="join" data-contract="${c.id}">Simulate sign-up</button>`}</div></section>
     ${fin?`<section class="card"><div class="cardhead"><h2>Contract</h2><span>${c.legal!=='None'?`<span class="chip bad">${esc(c.legal)}</span> `:''}<span class="chip ok">Active</span></span></div>
       <dl class="kv"><dt>Term</dt><dd>${fd(c.start)} – ${fd(c.end)} <span class="muted">(${c.months} months)</span></dd>
       <dt>Annual rent</dt><dd class="mono">${aed(c.rent)}</dd><dt>Payment plan</dt><dd>${c.plan} ${c.method==='cheque'?(c.plan===1?'cheque':'cheques'):(c.plan===1?'transfer':'transfers')}</dd>
@@ -829,8 +815,8 @@ function vNew(){
     <section class="card"><div class="cardhead"><h2>Payment schedule</h2><span class="sub" id="nc-total"></span></div><div id="nc-sched"></div></section>
     <section class="card"><h2 style="font-size:16px">Summary</h2><dl class="kv" id="nc-sum" style="font-size:13.5px"></dl>
      <div id="nc-err" hidden></div>
-     <button type="submit" class="btn primary" style="min-height:46px">${ren?'Create renewal contract':fr?'Create contract':'Create contract &amp; invite tenant'}</button>
-     <span class="hint muted" style="font-size:12px">${ren?'Schedules every payment on the new contract. The tenant is notified in MyC.':fr?'Schedules every payment and makes '+esc(first(fr.name))+' the contract holder. No invite needed, they are already on MyC.':'Creates the tenant, schedules every payment and sends the MyC invite to the mobile number above.'}</span></section>
+     <button type="submit" class="btn primary" style="min-height:46px">${ren?'Create renewal contract':fr?'Create contract':'Create contract'}</button>
+     <span class="hint muted" style="font-size:12px">${ren?'Schedules every payment on the new contract. The tenant is notified in MyC.':fr?'Schedules every payment and makes '+esc(first(fr.name))+' the contract holder. No invite needed, they are already on MyC.':'Creates the tenant and schedules every payment. You get an invite card to hand to the tenant so they join MyC.'}</span></section>
    </div>
   </form>`;
 }
@@ -892,10 +878,10 @@ function submitForm(){
   const wasRenew=!!form.renew;
   go('unit',{unit:f.unitId});
   if(wasRenew){toast(`Contract renewed for ${f.unitId} · ${f.plan} payments scheduled`);
-    phone(c,'Tenancy renewed',`Your tenancy for unit ${f.unitId} has been renewed from ${fd(c.start)} to ${fd(c.end)}. Payment reminders will continue to arrive here.`,'Renewal confirmed',c.joined?'':'Not on MyC with this number, so this went by SMS.');}
+    phone(c,'Tenancy renewed',`Your tenancy for unit ${f.unitId} has been renewed from ${fd(c.start)} to ${fd(c.end)}. Payment reminders will continue to arrive here.`,'Renewal confirmed','');}
   else if(c.joined){toast(`Contract created for ${f.unitId} · ${first(f.name)} is now the contract holder`);
     phone(c,'Building management',`${B[U[f.unitId].buildingId].name}: your tenancy for unit ${f.unitId} is now registered with building management. Payment and renewal reminders will arrive here.`,'Contract holder linked','Their app looks the same as before. The only change is that payment and renewal reminders now reach them.');}
-  else{toast(`Contract created for ${f.unitId} · ${f.plan} payment${f.plan>1?'s':''} · ${c.docs.length} document${c.docs.length===1?'':'s'} · invite sent`);showInvite(c);}
+  else{toast(`Contract created for ${f.unitId} · ${f.plan} payment${f.plan>1?'s':''} · ${c.docs.length} document${c.docs.length===1?'':'s'}`);showInvite(c);}
 }
 function bindForm(){
   const el=$('nc');fillUnits();
@@ -949,9 +935,9 @@ function vResidents(){
    ${rs.map(r=>{const c=contractFor(r.unitId),h=c&&c.tenant.mobile===r.mobile;return `<tr><td><b style="font-weight:500">${esc(r.name)}</b></td><td class="mono" style="white-space:nowrap">${fmob(r.mobile)}</td><td style="font-size:13px">${esc(r.email)}</td><td><button type="button" class="namebtn mono" data-action="open-unit" data-unit="${r.unitId}">${r.unitId}</button></td><td class="mono" style="font-size:12.5px;white-space:nowrap">${fd(r.since)}</td>
      <td>${h?'<span class="chip ok">Contract holder</span>':c?'<span class="chip plain">Household</span>':'<span class="chip warn">No contract yet</span>'}</td>
      <td class="r" style="white-space:nowrap">${!c&&can('new')?`<button type="button" class="btn sm" data-action="res-create" data-id="${r.id}">Create contract</button>`:''}${c&&!h&&can('collections')?`<button type="button" class="btn sm" data-action="res-holder" data-id="${r.id}">Make holder</button>`:''} <button type="button" class="btn sm ghost" data-action="res-remove" data-id="${r.id}">Remove</button></td></tr>`;}).join('')}</tbody></table></div></section>`;
-  else body=`<p class="muted" style="margin:0">Contracts whose holder hasn't signed up in MyC with the number on the contract. Their reminders go by SMS. Other people in the unit may still be on MyC.</p>
+  else body=`<p class="muted" style="margin:0">Contracts whose holder hasn't signed up in MyC with the number on the contract. They don't get payment reminders until they join, so hand them the invite card. Other people in the unit may already be on MyC.</p>
    <section class="card" style="padding-top:8px;padding-bottom:8px"><div class="tablebox"><table style="min-width:760px"><thead><tr><th>Contract holder</th><th>Unit</th><th>Mobile on contract</th><th>Others in unit on MyC</th><th><span class="sr">Actions</span></th></tr></thead><tbody>
-   ${nj.map(c=>`<tr><td><b style="font-weight:500">${esc(c.tenant.name)}</b></td><td><button type="button" class="namebtn mono" data-action="open-unit" data-unit="${c.unitId}">${c.unitId}</button></td><td class="mono">${fmob(c.tenant.mobile)}</td><td>${resOf(c.unitId).length||'<span class="muted">—</span>'}</td><td class="r" style="white-space:nowrap"><button type="button" class="btn sm" data-action="invite" data-contract="${c.id}">Send invite</button></td></tr>`).join('')}</tbody></table></div></section>`;
+   ${nj.map(c=>`<tr><td><b style="font-weight:500">${esc(c.tenant.name)}</b></td><td><button type="button" class="namebtn mono" data-action="open-unit" data-unit="${c.unitId}">${c.unitId}</button></td><td class="mono">${fmob(c.tenant.mobile)}</td><td>${resOf(c.unitId).length||'<span class="muted">—</span>'}</td><td class="r" style="white-space:nowrap"><button type="button" class="btn sm" data-action="invite" data-contract="${c.id}">Invite card</button></td></tr>`).join('')}</tbody></table></div></section>`;
   if(isQ)return `<header class="pagehead"><div class="t"><span class="eyebrow">Sign-up queue</span><h1>Residents waiting for a contract</h1><span class="muted">${q.length} sign-up${q.length===1?'':'s'} · newest first</span></div>
     <div class="tools">${bldSelect('res-building',bid)}<button type="button" class="btn" data-action="res-sim">Simulate a new sign-up</button></div></header>${body}`;
   return `<header class="pagehead"><div class="t"><span class="eyebrow">Residents</span><h1>People on MyC</h1><span class="muted">${S.residents.length} residents across ${new Set(S.residents.map(r=>r.unitId)).size} units · anyone can join, no approval needed</span></div>
@@ -1103,7 +1089,7 @@ function sendMsg(){
   const text=ta.value.trim();if(!text)return;
   const c=contractFor(t.unitId),toSel=$('ib-to'),to=toSel?toSel.value:'all',n=resOf(t.unitId).length;
   t.msgs.push({from:'m',text,to,at:'Today '+nowHM()});t.ts=++S.seq+1000;drafts[t.unitId]='';audit(to==='all'?`Messaged all ${n} residents`:'Messaged contract holder',t.unitId);
-  route.thread=t.unitId;render();toast(to==='all'?`Sent to ${n} resident${n===1?'':'s'} in MyC`:(c&&c.joined?'Delivered to the contract holder in MyC':'Contract holder not on MyC · sent by SMS'));
+  route.thread=t.unitId;render();toast(to==='all'?`Sent to ${n} resident${n===1?'':'s'} in MyC`:(c&&c.joined?'Delivered to the contract holder in MyC':'Contract holder is not on MyC yet. They will see it when they join.'));
   if((to==='all'&&n)||(c&&c.joined)){const R=['Thanks, noted.','Okay, thank you for letting me know.','Got it, thanks!','Sounds good. Thank you.'];
     setTimeout(()=>{typing=t.unitId;if(route.name==='inbox')render();},900);
     setTimeout(()=>{typing=null;t.msgs.push({from:'t',text:R[t.msgs.length%R.length],at:'Today '+nowHM()});t.ts=++S.seq+1000;if(route.name==='inbox'&&route.thread===t.unitId)render();else{t.unread=true;renderNav();}},2600);}
@@ -1218,7 +1204,7 @@ function rCash(){
 }
 function rRoll(){
   const us=S.units.filter(u=>route.rb==='all'||u.buildingId===route.rb);
-  const lab={ok:['Paid up','ok'],due:['Due soon','warn'],overdue:['Overdue','bad'],bounced:['Bounced','bad'],vacant:['Vacant','plain']};
+  const lab={ok:['Paid up','ok'],due:['Due soon','warn'],overdue:['Overdue','bad'],bounced:['Bounced','bad'],vacant:['Vacant','plain'],nocontract:['On MyC, no contract','info']};
   return `<div class="tools">${bldSelect('r-building',route.rb)}<button type="button" class="btn" data-action="copy-roll">Copy as CSV</button></div>
    <section class="card" style="padding-top:8px;padding-bottom:8px"><div class="tablebox"><table style="min-width:1000px"><thead><tr><th>Unit</th><th>Type</th><th>Tenant</th><th class="r">Annual rent</th><th>Plan</th><th>Start</th><th>Tawtheeq end</th><th>Next payment</th><th>Status</th></tr></thead><tbody>
    ${us.map(u=>{const c=contractFor(u.id),st=unitState(u),n=c?nextInst(c):null;return `<tr><td class="mono"><button type="button" class="namebtn mono" data-action="open-unit" data-unit="${u.id}">${u.id}</button></td><td>${u.type}</td><td>${c?esc(c.tenant.name):'<span class="muted">—</span>'}</td><td class="r mono">${c?num(c.rent):'—'}</td><td>${c?c.plan+' × '+(c.method==='cheque'?'cheque':'transfer'):'—'}</td><td class="mono" style="font-size:12.5px">${c?fd(c.start):'—'}</td><td class="mono" style="font-size:12.5px">${c?fd(c.twqEnd):'—'}</td><td class="mono" style="font-size:12.5px">${n?fd(n.due)+' · '+num(n.amount):'—'}</td><td><span class="chip ${lab[st][1]}">${lab[st][0]}</span></td></tr>`;}).join('')}
@@ -1321,8 +1307,8 @@ function sImport(){
    <div class="drop"><p>Upload a tenants &amp; contracts CSV, or load the sample: six existing tenants in Khalidiya Heights, the building being onboarded.</p>
     <label class="btn filebtn">Upload CSV<input type="file" accept=".csv,text/csv" data-change="imp-file" id="imp-file"></label><button type="button" class="btn primary" data-action="imp-sample">Load sample file</button></div>
    ${imp?`<div class="tablebox"><table style="min-width:860px"><thead><tr><th>Unit</th><th>Tenant</th><th>Mobile</th><th>On MyC</th><th class="r">Annual rent</th><th>Payments</th><th>Start</th><th>First cheque</th><th>Check</th></tr></thead><tbody>
-    ${imp.map(r=>{const ok=U[r.unit]&&!contractFor(r.unit)&&/^5\d{8}$/.test(r.mobile)&&r.rent>0;r.ok=ok;return `<tr><td class="mono">${esc(r.unit)}</td><td>${esc(r.name)}</td><td class="mono">${/^5\d{8}$/.test(r.mobile)?fmob(r.mobile):esc(r.mobile)}</td><td>${S.residents.some(x=>x.unitId===r.unit&&x.mobile===r.mobile)?'<span class="chip ok">Will link</span>':'<span class="muted">Invite</span>'}</td><td class="r mono">${num(r.rent)}</td><td>${r.plan}</td><td class="mono">${fd(r.start)}</td><td class="mono">${esc(r.bank)} #${esc(r.cheque)}</td><td>${ok?'<span class="chip ok">Ready</span>':'<span class="chip bad">Check row</span>'}</td></tr>`;}).join('')}</tbody></table></div>
-    <div class="tools"><button type="button" class="btn primary" data-action="imp-apply">Import ${imp.filter(r=>r.ok).length} contracts &amp; invite tenants</button><button type="button" class="btn ghost" data-action="imp-clear">Discard</button></div>`:''}</section>`;
+    ${imp.map(r=>{const ok=U[r.unit]&&!contractFor(r.unit)&&/^5\d{8}$/.test(r.mobile)&&r.rent>0;r.ok=ok;return `<tr><td class="mono">${esc(r.unit)}</td><td>${esc(r.name)}</td><td class="mono">${/^5\d{8}$/.test(r.mobile)?fmob(r.mobile):esc(r.mobile)}</td><td>${S.residents.some(x=>x.unitId===r.unit&&x.mobile===r.mobile)?'<span class="chip ok">Will link</span>':'<span class="muted">Needs invite card</span>'}</td><td class="r mono">${num(r.rent)}</td><td>${r.plan}</td><td class="mono">${fd(r.start)}</td><td class="mono">${esc(r.bank)} #${esc(r.cheque)}</td><td>${ok?'<span class="chip ok">Ready</span>':'<span class="chip bad">Check row</span>'}</td></tr>`;}).join('')}</tbody></table></div>
+    <div class="tools"><button type="button" class="btn primary" data-action="imp-apply">Import ${imp.filter(r=>r.ok).length} contracts</button><button type="button" class="btn ghost" data-action="imp-clear">Discard</button></div>`:''}</section>`;
 }
 
 /* ---------- MyC phone preview ---------- */
@@ -1341,16 +1327,30 @@ function phone(c,tag,text,title,note){
    <div class="phone">${scr}</div>${note?`<p class="ph-note">${note}</p>`:''}`;
   el.hidden=false;
 }
+function qr(seed){let h=0;for(const ch of seed)h=(h*31+ch.charCodeAt(0))>>>0;const r=rng(h),n=21,c=[];
+  const fin=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7" fill="#1F1B17"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#1F1B17"/>`;
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){const inF=(x<8&&y<8)||(x>12&&y<8)||(x<8&&y>12);if(!inF&&r()<0.5)c.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="#1F1B17"/>`);}
+  return `<svg viewBox="-2 -2 25 25" width="132" height="132" role="img" aria-label="QR code to download MyC"><rect x="-2" y="-2" width="25" height="25" fill="#fff"/>${c.join('')}${fin(0,0)}${fin(14,0)}${fin(0,14)}</svg>`;}
 function showInvite(c){const u=U[c.unitId],b=B[u.buildingId];
-  phone({...c,joined:false},'Invite',`${b.name}: your tenancy for unit ${u.id} is set up. Download MyC and sign up with this number to get payment reminders, building notices and updates from management: mycommunityuae.com/app`,'Invite sent by SMS',`When ${esc(first(c.tenant.name))} signs up with ${fmob(c.tenant.mobile)}, MyC recognises the number and marks them as the contract holder for ${u.id}. Other residents of the unit can join too.`);}
+  const el=$('phone');el.innerHTML=`<div class="ph-head"><div><span class="eyebrow">Invite card</span><h2>Get ${esc(first(c.tenant.name))} onto MyC</h2><p>${esc(c.tenant.name)} · ${u.id} · not on MyC yet</p></div><button type="button" class="closebtn" data-action="close-phone" aria-label="Close">${svg('x',16)}</button></div>
+   <div style="background:var(--myc-bg);color:var(--myc-ink);border:1px solid var(--myc-rule);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px">
+    <span class="myc-logo">My<i>C</i></span><span class="myc-bld">${esc(b.name)} · apartment ${u.id.slice(3)}</span>
+    <b style="font-family:var(--serif);font-size:20px;font-weight:600">Join your building on MyC</b>
+    <ol style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.6"><li>Scan the code to download MyC</li><li>Sign up with <b>${fmob(c.tenant.mobile)}</b></li><li>Choose ${esc(b.name)}, apartment ${u.id.slice(3)}</li></ol>
+    <div style="display:flex;justify-content:center">${qr(u.id)}</div>
+    <span style="font-size:12px;color:var(--myc-muted);text-align:center">You'll get payment reminders, building notices and maintenance updates here.</span></div>
+   <p class="ph-note">Print it for the contract pack, or show it on screen at key handover. Once ${esc(first(c.tenant.name))} signs up with this number, MyC marks them as the contract holder for ${u.id}. Nothing is sent by SMS.</p>`;
+  el.hidden=false;}
 function sendReminders(ids){
-  const xs=ids.map(findInst).filter(Boolean);if(!xs.length)return;
-  xs.forEach(x=>x.i.reminders.push({at:TODAY,channel:x.c.joined?'MyC push':'SMS',auto:false}));
+  const all_=ids.map(findInst).filter(Boolean);if(!all_.length)return;
+  const xs=all_.filter(x=>x.c.joined),off=all_.length-xs.length;
+  if(!xs.length){const c=all_[0].c;showInvite(c);toast(off>1?`None of these ${off} tenants are on MyC yet, so no reminder was sent`:`${first(c.tenant.name)} isn't on MyC yet, so the reminder can't reach them`);return;}
+  xs.forEach(x=>x.i.reminders.push({at:TODAY,channel:'MyC',auto:false}));
   audit(`Sent ${xs.length} payment reminder${xs.length>1?'s':''}`,xs.length===1?xs[0].u.id:null);
-  const x=xs[0],[tag,text]=msgFor(x),sms=xs.filter(y=>!y.c.joined).length;
+  const x=xs[0],[tag,text]=msgFor(x);
   phone(x.c,tag,text,xs.length>1?`Reminder sent to ${xs.length} tenants`:'Reminder sent',
-    xs.length>1?`Showing ${esc(first(x.c.tenant.name))}'s message. Each tenant gets their own amount, date and cheque number.${sms?` ${sms} not on MyC yet received it by SMS.`:''}`:(x.c.joined?'':'This tenant is not on MyC yet, so the reminder went by SMS.'));
-  toast(xs.length>1?`Reminders sent to ${xs.length} tenants`:`Reminder sent to ${first(x.c.tenant.name)}`);
+    xs.length>1?`Showing ${esc(first(x.c.tenant.name))}'s message. Each tenant gets their own amount, date and cheque number.${off?` ${off} selected tenant${off>1?'s are':' is'} not on MyC yet and did not get it.`:''}`:(off?`${off} selected tenant${off>1?'s are':' is'} not on MyC yet and did not get it.`:''));
+  toast((xs.length>1?`Reminders sent to ${xs.length} tenants in MyC`:`Reminder sent to ${first(x.c.tenant.name)} in MyC`)+(off?` · ${off} not on MyC`:''));
 }
 
 /* ---------- toast ---------- */
@@ -1381,8 +1381,8 @@ const A={
   'pick-building':d=>go('overview',{building:d.b}),
   tab:d=>{route.tab=d.tab;sel.clear();render();},
   remind:d=>{sendReminders([d.inst]);render();$('phone').hidden=false;},
-  'renew-remind':d=>{const c=ct(d.contract),u=U[c.unitId];c.renewal='Reminder sent';audit('Sent renewal reminder',c.unitId);render();
-    phone(c,'Tenancy renewal',`Your tenancy for unit ${u.id} ends on ${fd(c.twqEnd)}. Do you plan to renew? Reply here and management will send you the renewal terms.`,'Renewal reminder sent',c.joined?'':'Not on MyC yet, so this went by SMS.');
+  'renew-remind':d=>{const c=ct(d.contract),u=U[c.unitId];if(!c.joined){showInvite(c);toast(`${first(c.tenant.name)} isn't on MyC yet, so the renewal reminder can't reach them`);return;}c.renewal='Reminder sent';audit('Sent renewal reminder',c.unitId);render();
+    phone(c,'Tenancy renewal',`Your tenancy for unit ${u.id} ends on ${fd(c.twqEnd)}. Do you plan to renew? Reply here and management will send you the renewal terms.`,'Renewal reminder sent','');
     toast('Renewal reminder sent to '+first(c.tenant.name));},
   renew:d=>{const c=ct(d.contract);go('new',{renew:c.id,unit:c.unitId});},
   'toggle-sel':(d,el)=>{el.checked?sel.add(d.inst):sel.delete(d.inst);fillCollections();},
@@ -1392,7 +1392,7 @@ const A={
     audit(`Marked ${n} payment${n===1?'':'s'} ${d.status}`);sel.clear();
     const skipped=xs.length-n;toast(`${n} payment${n===1?'':'s'} marked ${d.status==='cleared'?'cleared / paid':d.status}${skipped?` · ${skipped} bank transfer${skipped>1?'s':''} skipped`:''}`);render();},
   'bulk-remind':()=>{sendReminders([...sel]);sel.clear();render();$('phone').hidden=false;},
-  invite:d=>{const c=ct(d.contract);showInvite(c);toast('Invite resent to '+fmob(c.tenant.mobile));},
+  invite:d=>{const c=ct(d.contract);showInvite(c);},
   join:d=>{const c=ct(d.contract);if(!S.residents.some(r=>r.unitId===c.unitId&&r.mobile===c.tenant.mobile))addRes({name:c.tenant.name,mobile:c.tenant.mobile,unitId:c.unitId,since:TODAY});c.joined=true;audit('Tenant signed up in MyC and was linked by mobile',c.unitId);toast(first(c.tenant.name)+' signed up with '+fmob(c.tenant.mobile)+' and was linked to '+c.unitId);render();},
   'close-phone':()=>{$('phone').hidden=true;},
   'nc-sample':()=>sampleForm(),
@@ -1425,7 +1425,7 @@ const A={
   'imp-clear':()=>{imp=null;render();},
   'imp-apply':()=>{const ok=imp.filter(r=>r.ok);ok.forEach(r=>{const c=makeContract({unitId:r.unit,tenant:{type:'individual',name:r.name,mobile:r.mobile,email:'',licence:''},start:r.start,months:12,rent:r.rent,deposit:Math.round(r.rent*0.05/100)*100,plan:r.plan,method:'cheque',bank:r.bank,chequeNos:Array.from({length:r.plan},(_,k)=>String(+r.cheque+k)),twqNo:'TWQ-'+r.start.slice(0,4)+'-'+(500000+Math.floor(Math.random()*400000))});
       c.installments.forEach(i=>{if(i.due<TODAY)i.status='cleared';});S.contracts.push(c);linkJoined(c);});
-    const lk=ok.filter(r=>contractFor(r.unit)&&contractFor(r.unit).joined).length;audit(`Imported ${ok.length} contracts from CSV`);imp=null;render();toast(`Imported ${ok.length} contracts · ${lk} matched to existing MyC sign-ups · ${ok.length-lk} invites sent by SMS`);},
+    const lk=ok.filter(r=>contractFor(r.unit)&&contractFor(r.unit).joined).length;audit(`Imported ${ok.length} contracts from CSV`);imp=null;render();toast(`Imported ${ok.length} contracts · ${lk} matched to existing MyC sign-ups · ${ok.length-lk} need an invite card (Residents › Contract holders not on MyC)`);},
   moveout:()=>{route.moveout=true;render();},
   'moveout-cancel':()=>{route.moveout=false;render();},
   'moveout-confirm':d=>{const c=ct(d.contract),date=$('mo-date').value||TODAY,ded=Math.max(0,+$('mo-ded').value||0),reason=$('mo-reason').value.trim(),refund=Math.max(0,c.deposit-ded);
@@ -1442,8 +1442,7 @@ const A={
     const u=free.length?free[Math.floor(Math.random()*free.length)]:S.units[0],nm=pool[Math.floor(Math.random()*pool.length)];
     const r=addRes({name:nm[0]+' '+nm[1],mobile:'5'+['0','2','5','6'][Math.floor(Math.random()*4)]+String(1000000+Math.floor(Math.random()*8999999)),unitId:u.id,since:TODAY});
     go('queue');toast(`New MyC sign-up: ${r.name} for ${u.id} · added to the queue`);},
-  reset:()=>{init();toast('Demo reset to sample data');},
-  theme:()=>{applyTheme(currentTheme()==='dark'?'light':'dark');render();}
+  reset:()=>{init();toast('Demo reset to sample data');}
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-action]');if(!el||el.disabled)return;
   if(el.tagName==='TR'&&e.target.closest('button,a,input,select,label'))return;
