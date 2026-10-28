@@ -357,7 +357,7 @@ function buildSchedule(start,months,rent,plan){
 function makeContract(o){
   const id='c'+(S.seq++),end=addDays(addMonths(o.start,o.months),-1);
   const inst=buildSchedule(o.start,o.months,o.rent,o.plan).map((s,k,arr)=>({id:id+'-'+(k+1),n:k+1,of:arr.length,due:s.due,amount:s.amount,method:o.method,bank:o.method==='cheque'?o.bank:null,chequeNo:o.method==='cheque'?o.chequeNos[k]:null,status:o.method==='cheque'?'held':'due',reminders:[]}));
-  return {id,unitId:o.unitId,tenant:o.tenant,start:o.start,end,months:o.months,rent:o.rent,deposit:o.deposit,plan:o.plan,method:o.method,twqNo:o.twqNo,twqEnd:o.twqEnd||end,status:'active',joined:false,renewal:null,installments:inst,docs:[],legal:'None',movedOut:null};
+  return {id,unitId:o.unitId,tenant:o.tenant,start:o.start,end,months:o.months,rent:o.rent,deposit:o.deposit,plan:o.plan,method:o.method,twqNo:o.twqNo,twqEnd:o.twqEnd||end,reg:Object.assign({usage:'Residential',propId:propId(U[o.unitId]),occupants:null,conditions:''},o.reg||{}),status:'active',joined:false,renewal:null,installments:inst,docs:[],legal:'None',movedOut:null};
 }
 function makeLease(o){
   const id='ML-'+(101+S.leases.length),n=o.years*o.perYear,step=12/o.perYear,amt=Math.round(o.rent/o.perYear);
@@ -367,13 +367,13 @@ function makeLease(o){
 }
 
 function seed(){
-  const r=rng(20261026),pick=a=>a[Math.floor(r()*a.length)];
+  const r=rng(20261026),pick=a=>a[Math.floor(r()*a.length)],r2=rng(4412),pick2=a=>a[Math.floor(r2()*a.length)];
   S={seq:1,buildings:[],units:[],contracts:[],tickets:[],audit:[],assets:[],vendors:[],landlords:[],leases:[],threads:[],members:[],viewAs:'manager',tk:1060};
   S.buildings=[
-    {id:'mv',name:'Marina View Tower',short:'Marina View',code:'MV',floors:8,area:'Al Reem Island'},
-    {id:'rg',name:'Reem Gate Residence',short:'Reem Gate',code:'RG',floors:6,area:'Al Reem Island'},
-    {id:'cc',name:'Corniche Court',short:'Corniche Court',code:'CC',floors:5,area:'Corniche'},
-    {id:'kh',name:'Khalidiya Heights',short:'Khalidiya',code:'KH',floors:4,area:'Khalidiya',onboarding:true}];
+    {id:'mv',name:'Marina View Tower',short:'Marina View',code:'MV',floors:8,area:'Al Reem Island',plot:'RT3-C14'},
+    {id:'rg',name:'Reem Gate Residence',short:'Reem Gate',code:'RG',floors:6,area:'Al Reem Island',plot:'RT2-B07'},
+    {id:'cc',name:'Corniche Court',short:'Corniche Court',code:'CC',floors:5,area:'Corniche',plot:'E18-012'},
+    {id:'kh',name:'Khalidiya Heights',short:'Khalidiya',code:'KH',floors:4,area:'Khalidiya',plot:'W12-031',onboarding:true}];
   const TYPES=[['Studio',42000,52000],['1 BR',64000,82000],['1 BR',66000,84000],['2 BR',95000,125000]];
   S.buildings.forEach(b=>{for(let f=1;f<=b.floors;f++)for(let p=1;p<=4;p++){const t=TYPES[p-1];S.units.push({id:b.code+'-'+pad(f)+pad(p),buildingId:b.id,floor:f,type:t[0],min:t[1],max:t[2]});}});
   U=Object.fromEntries(S.units.map(u=>[u.id,u]));B=Object.fromEntries(S.buildings.map(b=>[b.id,b]));
@@ -389,6 +389,10 @@ function seed(){
     const c=makeContract({unitId:u.id,tenant:{type:company?'company':'individual',name:company?pick(CO):pick(FN)+' '+pick(LN),mobile:'5'+pick(['0','2','5','6','8'])+String(Math.floor(r()*1e7)).padStart(7,'0'),email:'',licence:company?'CN-'+(1000000+Math.floor(r()*8999999)):''},
       start,months:12,rent,deposit:Math.round(rent*0.05/100)*100,plan,method,bank,chequeNos:Array.from({length:plan},(_,i)=>String(c0+i)),twqNo:'TWQ-'+start.slice(0,4)+'-'+(100000+Math.floor(r()*899999))});
     c.joined=r()<0.72;
+    {const t=c.tenant,eid=()=>'784-'+(1965+Math.floor(r2()*35))+'-'+String(Math.floor(r2()*1e7)).padStart(7,'0')+'-'+Math.floor(r2()*10);
+     if(t.type==='company'){t.sig=pick2(FN)+' '+pick2(LN);t.sigEid=eid();}
+     else{t.nat=pick2(NATS);if(r2()<0.85){t.eid=eid();t.eidExp=addDays(TODAY,40+Math.floor(r2()*900));}if(r2()<0.9)t.pp=pick2(['A','N','P','K','L'])+String(Math.floor(r2()*1e7)).padStart(7,'0');}
+     if(r2()<0.85)c.reg.occupants=u.type==='Studio'?1:1+Math.floor(r2()*(u.type==='2 BR'?5:3));}
     c.docs=[{name:'Tenancy contract (signed).pdf',at:c.start},{name:'Tawtheeq certificate.pdf',at:addDays(c.start,3)},{name:company?'Trade licence.pdf':'Emirates ID.pdf',at:c.start}];
     c.installments.forEach(i=>{
       const d=diff(i.due,TODAY);
@@ -434,9 +438,9 @@ function seed(){
 
   /* landlords & master leases */
   S.landlords=[
-    {id:'l1',name:'Al Noor Real Estate Investments',contact:'Khalid Al Noor',mobile:'502214410',bank:'FAB'},
-    {id:'l2',name:'Hamdan Family Holdings',contact:'Mohammed Hamdan',mobile:'558701123',bank:'ADCB'},
-    {id:'l3',name:'Gulf Horizon Properties',contact:'Leena Varghese',mobile:'523309087',bank:'Emirates NBD'}];
+    {id:'l1',name:'Al Noor Real Estate Investments',contact:'Khalid Al Noor',mobile:'502214410',bank:'FAB',licence:'CN-1048821'},
+    {id:'l2',name:'Hamdan Family Holdings',contact:'Mohammed Hamdan',mobile:'558701123',bank:'ADCB',licence:'CN-2219034'},
+    {id:'l3',name:'Gulf Horizon Properties',contact:'Leena Varghese',mobile:'523309087',bank:'Emirates NBD',licence:'CN-3307716'}];
   const bsum=(bid,f)=>Math.round(S.units.filter(u=>u.buildingId===bid).reduce((s,u)=>s+mid(u),0)*f/5000)*5000;
   const urents=(ids,f)=>Object.fromEntries(ids.map(id=>[id,Math.round(mid(U[id])*f/500)*500]));
   S.leases.push(makeLease({landlordId:'l1',scope:'building',buildingId:'mv',start:'2024-03-05',years:5,rent:bsum('mv',0.68),perYear:4,firstCheque:'300101'}));
@@ -548,6 +552,34 @@ function unitCost(uid){const l=leaseFor(uid);if(!l)return 0;if(l.scope==='units'
 const unitIncome=uid=>{const c=contractFor(uid);return c?c.rent:0;};
 const leaseIncome=l=>leaseUnits(l).reduce((s,u)=>s+unitIncome(u.id),0);
 const LL=id=>S.landlords.find(l=>l.id===id);
+const NATS=['India','Pakistan','Philippines','Egypt','United Kingdom','Jordan','Lebanon','Syria','Nigeria','Russia','Italy','Sri Lanka','Bangladesh','United States','United Arab Emirates','Sudan','China','France'];
+const eidOk=v=>/^784\d{12}$/.test(String(v).replace(/[-\s]/g,''));
+const fmtEid=v=>{const d=String(v||'').replace(/\D/g,'');return d.length===15?`${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7,14)}-${d.slice(14)}`:String(v||'');};
+const propId=u=>B[u.buildingId].plot+'-'+u.id.slice(3);
+/* what DARI asks for to register a Tawtheeq contract; opt = not required */
+function twqItems(t,g,unitId,c){const u=U[unitId],b=B[u.buildingId],l=leaseFor(unitId),ll=l?LL(l.landlordId):null,co=t.type==='company';
+  const it=[['Tenant',co?'Company name':'Tenant name',t.name],['Tenant','Mobile',t.mobile?fmob(t.mobile):''],['Tenant','Email',t.email,1]];
+  if(co)it.push(['Tenant','Trade licence no.',t.licence],['Tenant','Authorised signatory',t.sig],['Tenant','Signatory Emirates ID',t.sigEid?fmtEid(t.sigEid):'']);
+  else it.push(['Tenant','Nationality',t.nat],['Tenant','Emirates ID no.',t.eid?fmtEid(t.eid):''],['Tenant','Emirates ID expiry',t.eidExp?fd(t.eidExp):''],['Tenant','Passport no.',t.pp]);
+  it.push(['Property','Property / unit ID',g.propId],['Property','Plot / community',b.plot+' · '+b.area],['Property','Building',b.name],['Property','Unit',u.id+' · '+u.type],['Property','Usage',g.usage],['Property','Number of occupants',g.occupants?String(g.occupants):''],
+   ['Owner','Owner (landlord)',ll?ll.name:''],['Owner','Owner trade licence / ID',ll?ll.licence||'':''],['Owner','Management agreement',l?l.id+' · '+fd(l.start)+' – '+fd(l.end):'']);
+  if(c)it.push(['Terms','Start',fd(c.start)],['Terms','End',fd(c.end)],['Terms','Annual rent',aed(c.rent)],['Terms','Security deposit',aed(c.deposit)],['Terms','Payments',c.plan+' by '+(c.method==='cheque'?'post-dated cheque':'bank transfer')]);
+  it.push(['Terms','Special conditions',g.conditions,1]);
+  return it.map(([sec,label,val,opt])=>({sec,label,val:val||'',opt:!!opt}));}
+const twqMissing=(t,g,unitId)=>twqItems(t,g,unitId).filter(x=>!x.opt&&!x.val).map(x=>x.label);
+function twqCard(c){const its=twqItems(c.tenant,c.reg,c.unitId,c),miss=its.filter(x=>!x.opt&&!x.val),g=c.reg;
+  const head=`<div class="cardhead"><h2>Tawtheeq details</h2><span>${miss.length?`<span class="chip warn">${miss.length} missing</span>`:'<span class="chip ok">Ready for Tawtheeq</span>'} ${route.regedit?'':`<button type="button" class="btn sm" data-action="twq-copy" data-contract="${c.id}">Copy for DARI</button>${can('new')?` <button type="button" class="btn sm" data-action="reg-edit">Edit</button>`:''}`}</span></div>`;
+  if(route.regedit)return `<section class="card">${head}<form id="rg-form" novalidate style="display:flex;flex-direction:column;gap:14px"><div class="fields">
+    <div class="f"><label for="rg-pid">Property / unit ID</label><input type="text" id="rg-pid" value="${esc(g.propId||'')}"></div>
+    <div class="f"><label for="rg-use">Usage</label><select id="rg-use">${['Residential','Commercial'].map(x=>`<option ${g.usage===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    <div class="f"><label for="rg-occ">Number of occupants</label><input type="number" id="rg-occ" min="1" max="20" value="${g.occupants||''}"></div></div>
+    <div class="f"><label for="rg-cond">Special conditions <span class="muted" style="font-weight:400">(optional)</span></label><textarea class="textarea" id="rg-cond">${esc(g.conditions||'')}</textarea></div>
+    <div class="tools"><button type="submit" class="btn primary sm">Save</button><button type="button" class="btn ghost sm" data-action="reg-cancel">Cancel</button></div></form></section>`;
+  const show=['Property / unit ID','Plot / community','Usage','Number of occupants','Owner (landlord)','Owner trade licence / ID','Management agreement','Special conditions'];
+  return `<section class="card">${head}<dl class="kv">${its.filter(x=>show.includes(x.label)).map(x=>`<dt>${x.label}</dt><dd>${x.val?esc(x.val):x.opt?'<span class="muted">—</span>':'<span style="color:var(--warn)">Missing</span>'}</dd>`).join('')}</dl>
+   ${miss.length?`<p class="muted" style="margin:0;font-size:13px">Still needed for DARI: ${miss.map(x=>esc(x.label)).join(', ')}.</p>`:'<p class="muted" style="margin:0;font-size:13px">Everything DARI asks for is here. Use Copy for DARI when you register or renew it.</p>'}</section>`;}
+function saveReg(){const c=contractFor(route.unit);Object.assign(c.reg,{propId:$('rg-pid').value.trim(),usage:$('rg-use').value,occupants:+$('rg-occ').value||null,conditions:$('rg-cond').value.trim()});
+  audit('Updated Tawtheeq details',c.unitId);route.regedit=false;render();toast('Tawtheeq details saved');}
 const V=id=>S.vendors.find(v=>v.id===id);
 const A_=id=>S.assets.find(a=>a.id===id);
 function covers(l){const b=B[l.buildingId];return l.scope==='building'?`${b.name} · whole building (${leaseUnits(l).length} units)`:`${b.name} · ${l.unitIds.length} units (floors ${Math.min(...leaseUnits(l).map(u=>u.floor))}–${Math.max(...leaseUnits(l).map(u=>u.floor))})`;}
@@ -755,10 +787,17 @@ function vUnit(){
        <div class="fields"><div class="f"><label for="te-n">Name</label><input type="text" id="te-n" value="${esc(t.name)}"></div>
        <div class="f"><label for="te-m">Mobile number</label><div class="prefix"><span>+971</span><input type="tel" id="te-m" inputmode="numeric" value="${fmob(t.mobile).slice(5)}"></div><span class="hint">Changing it re-links the contract holder to whoever is on MyC with the new number.</span></div>
        <div class="f"><label for="te-e">Email <span class="muted" style="font-weight:400">(optional)</span></label><input type="email" id="te-e" value="${esc(t.email||'')}"></div>
-       <div class="f"><label for="te-l">Trade licence no. <span class="muted" style="font-weight:400">(companies)</span></label><input type="text" id="te-l" value="${esc(t.licence||'')}"></div></div>
+       <div class="f"><label for="te-l">Trade licence no. <span class="muted" style="font-weight:400">(companies)</span></label><input type="text" id="te-l" value="${esc(t.licence||'')}"></div>
+       <div class="f"><label for="te-nat">Nationality <span class="muted" style="font-weight:400">(individuals)</span></label><input type="text" id="te-nat" list="nat-list" value="${esc(t.nat||'')}"></div>
+       <div class="f"><label for="te-eid">Emirates ID no. <span class="muted" style="font-weight:400">(individuals)</span></label><input type="text" id="te-eid" inputmode="numeric" placeholder="784-1990-1234567-1" value="${esc(t.eid?fmtEid(t.eid):'')}"></div>
+       <div class="f"><label for="te-eidexp">Emirates ID expiry</label><input type="date" id="te-eidexp" value="${esc(t.eidExp||'')}"></div>
+       <div class="f"><label for="te-pp">Passport no. <span class="muted" style="font-weight:400">(individuals)</span></label><input type="text" id="te-pp" value="${esc(t.pp||'')}"></div>
+       <div class="f"><label for="te-sig">Authorised signatory <span class="muted" style="font-weight:400">(companies)</span></label><input type="text" id="te-sig" value="${esc(t.sig||'')}"></div>
+       <div class="f"><label for="te-sigeid">Signatory Emirates ID <span class="muted" style="font-weight:400">(companies)</span></label><input type="text" id="te-sigeid" inputmode="numeric" value="${esc(t.sigEid?fmtEid(t.sigEid):'')}"></div></div>
+       <datalist id="nat-list">${NATS.map(n=>`<option value="${n}">`).join('')}</datalist>
        <div id="te-err" hidden></div>
        <div class="tools"><button type="submit" class="btn primary sm">Save tenant details</button><button type="button" class="btn ghost sm" data-action="t-cancel">Cancel</button></div></form>`
-      :`<dl class="kv"><dt>Name</dt><dd><b style="font-weight:600">${esc(t.name)}</b></dd><dt>Mobile</dt><dd class="mono">${fmob(t.mobile)}</dd>${t.email?`<dt>Email</dt><dd>${esc(t.email)}</dd>`:''}${t.licence?`<dt>Trade licence</dt><dd class="mono">${esc(t.licence)}</dd>`:''}</dl>`}
+      :`<dl class="kv"><dt>Name</dt><dd><b style="font-weight:600">${esc(t.name)}</b></dd><dt>Mobile</dt><dd class="mono">${fmob(t.mobile)}</dd>${t.email?`<dt>Email</dt><dd>${esc(t.email)}</dd>`:''}${t.licence?`<dt>Trade licence</dt><dd class="mono">${esc(t.licence)}</dd>`:''}${t.sig?`<dt>Signatory</dt><dd>${esc(t.sig)}${t.sigEid?`<div class="mono muted" style="font-size:12px">${fmtEid(t.sigEid)}</div>`:''}</dd>`:''}${t.nat?`<dt>Nationality</dt><dd>${esc(t.nat)}</dd>`:''}${t.type!=='company'?`<dt>Emirates ID</dt><dd>${t.eid?`<span class="mono">${fmtEid(t.eid)}</span>${t.eidExp?` <span style="color:${t.eidExp<TODAY?'var(--bad)':t.eidExp<c.end?'var(--warn)':'var(--muted)'}">· ${t.eidExp<TODAY?'expired':'expires'} ${fd(t.eidExp)}</span>`:''}`:'<span style="color:var(--warn)">Not entered</span>'}</dd>`:''}${t.pp?`<dt>Passport</dt><dd class="mono">${esc(t.pp)}</dd>`:''}</dl>`}
       <div class="linkbox">${c.joined?`<span class="chip ok">On MyC</span><p>Contract holder found on MyC by mobile number. Payment and renewal reminders go to them as MyC notifications.</p>`
         :`<span class="chip warn">Not on MyC</span><p>No one has signed up with ${fmob(t.mobile)} yet. When they do, MyC recognises them as the contract holder. Until then they won't get payment reminders.</p><button type="button" class="btn sm" data-action="invite" data-contract="${c.id}">Show invite card</button><button type="button" class="btn sm ghost" data-action="join" data-contract="${c.id}">Simulate sign-up</button>`}</div></section>
     ${fin?`<section class="card"><div class="cardhead"><h2>Contract</h2><span>${c.legal!=='None'?`<span class="chip bad">${esc(c.legal)}</span> `:''}<span class="chip ok">Active</span></span></div>
@@ -770,6 +809,7 @@ function vUnit(){
       ${route.moveout?'':`<div><button type="button" class="btn sm" data-action="moveout">End contract / move-out</button></div>`}</section>`:''}
    </div>
    ${mo}
+   ${fin?twqCard(c):''}
    ${residentsCard(u,c)}
    ${fin?`<section class="card"><div class="cardhead"><h2>Payment schedule</h2><span class="sub">Collected <span class="mono">${aed(col)}</span> of <span class="mono">${aed(tot)}</span></span></div>
     <div class="tablebox"><table style="min-width:820px"><thead><tr><th>#</th><th>Due</th><th>Method</th><th class="r">Amount (AED)</th><th>Status</th><th>Last reminder</th><th>Update status</th><th><span class="sr">Remind</span></th></tr></thead><tbody>
@@ -786,7 +826,9 @@ function saveTenant(){
   const c=contractFor(route.unit),n=$('te-n').value.trim(),m=$('te-m').value.replace(/\D/g,'').replace(/^971/,''),errs=[];
   if(!n)errs.push('Enter the tenant name');if(!/^5\d{8}$/.test(m))errs.push('Enter a 9-digit UAE mobile number starting with 5');
   const box=$('te-err');if(errs.length){box.hidden=false;box.className='errors';box.innerHTML=`<b>Fix these to save</b><ul>${errs.map(e=>`<li>${e}</li>`).join('')}</ul>`;return;}
-  const was=c.joined,oldM=c.tenant.mobile;Object.assign(c.tenant,{type:radio('te-tt'),name:n,mobile:m,email:$('te-e').value.trim(),licence:$('te-l').value.trim()});
+  const eid=$('te-eid').value.trim(),seid=$('te-sigeid').value.trim();if(eid&&!eidOk(eid))errs.push('Emirates ID should be 15 digits starting 784');if(seid&&!eidOk(seid))errs.push('Signatory Emirates ID should be 15 digits starting 784');
+  if(errs.length){box.hidden=false;box.className='errors';box.innerHTML=`<b>Fix these to save</b><ul>${errs.map(e=>`<li>${e}</li>`).join('')}</ul>`;return;}
+  const was=c.joined,oldM=c.tenant.mobile;Object.assign(c.tenant,{type:radio('te-tt'),name:n,mobile:m,email:$('te-e').value.trim(),licence:$('te-l').value.trim(),nat:$('te-nat').value.trim(),eid:eid?fmtEid(eid):'',eidExp:$('te-eidexp').value,pp:$('te-pp').value.trim(),sig:$('te-sig').value.trim(),sigEid:seid?fmtEid(seid):''});
   linkJoined(c);audit('Updated tenant details',c.unitId);route.tedit=false;render();
   toast(m===oldM?'Tenant details saved':c.joined?`Saved · ${first(n)} is linked to their MyC account on the new number`:(was?'Saved · no one is on MyC with the new number yet':'Saved · mobile number updated'));
 }
@@ -795,7 +837,7 @@ function vNew(){
   const ren=route.renew?S.contracts.find(c=>c.id===route.renew):null;
   const fr=route.fromRes?S.residents.find(x=>x.id===route.fromRes):null;
   const preU=ren?ren.unitId:route.unit,pre=preU?U[preU]:null,bid=pre?pre.buildingId:'mv';
-  form={bid,unit:pre?pre.id:'',renew:ren?ren.id:null,fromRes:fr?fr.id:null,twqTouched:false,depTouched:false,over:{},docs:{contract:[],twq:[],id:[],cheques:[],other:[]}};
+  form={bid,unit:pre?pre.id:'',renew:ren?ren.id:null,fromRes:fr?fr.id:null,twqTouched:false,depTouched:false,pidTouched:false,over:{},docs:{contract:[],twq:[],id:[],cheques:[],other:[]}};
   return `<header class="pagehead"><div class="t"><span class="eyebrow">${ren?'Renewal':fr?'New contract · from MyC sign-up':'New contract'}</span><h1>${ren?`Renew tenancy · ${ren.unitId}`:'New tenancy contract'}</h1></div>
     <div class="tools">${ren||fr?'':`<button type="button" class="btn" data-action="nc-sample">Fill sample data</button>`}<button type="button" class="btn ghost" data-action="${ren?'open-unit':'go'}" data-go="overview" data-unit="${ren?ren.unitId:''}">Cancel</button></div></header>
   ${fr?`<div class="linkbox"><span class="chip ok">On MyC</span><p><b>${esc(fr.name)}</b> signed up in MyC for apartment <span class="mono">${fr.unitId.slice(3)}</span>, ${esc(B[U[fr.unitId].buildingId].name)}, on ${fd(fr.since)}. Name, phone, email and unit are filled in from the sign-up. Add the contract terms and payments. Once created, ${esc(first(fr.name))} becomes the contract holder and starts getting payment reminders. Nothing else changes in their app.</p></div>`:''}
@@ -811,7 +853,14 @@ function vNew(){
       <div class="f"><label for="nc-name" id="nc-name-l">Full name</label><input type="text" id="nc-name" autocomplete="off"></div>
       <div class="f"><label for="nc-mob">Mobile number</label><div class="prefix"><span>+971</span><input type="tel" id="nc-mob" placeholder="50 123 4567" inputmode="numeric"></div><span class="hint" id="nc-mob-hint">If this number signs up in MyC, they're recognised as the contract holder and get payment reminders.</span></div>
       <div class="f"><label for="nc-email">Email <span class="muted" style="font-weight:400">(optional)</span></label><input type="email" id="nc-email"></div>
-      <div class="f" id="nc-lic-f" hidden><label for="nc-lic">Trade licence no.</label><input type="text" id="nc-lic"></div></div></section>
+      <div class="f" data-ind><label for="nc-nat">Nationality</label><input type="text" id="nc-nat" list="nat-list" autocomplete="off"></div>
+      <div class="f" data-ind><label for="nc-eid">Emirates ID no.</label><input type="text" id="nc-eid" inputmode="numeric" placeholder="784-1990-1234567-1"></div>
+      <div class="f" data-ind><label for="nc-eidexp">Emirates ID expiry</label><input type="date" id="nc-eidexp"></div>
+      <div class="f" data-ind><label for="nc-pp">Passport no.</label><input type="text" id="nc-pp"></div>
+      <div class="f" id="nc-lic-f" data-co hidden><label for="nc-lic">Trade licence no.</label><input type="text" id="nc-lic"></div>
+      <div class="f" data-co hidden><label for="nc-sig">Authorised signatory</label><input type="text" id="nc-sig"><span class="hint">The person who signs for the company.</span></div>
+      <div class="f" data-co hidden><label for="nc-sigeid">Signatory Emirates ID</label><input type="text" id="nc-sigeid" inputmode="numeric" placeholder="784-1990-1234567-1"></div></div>
+      <datalist id="nat-list">${NATS.map(n=>`<option value="${n}">`).join('')}</datalist></section>
     <section class="card sec"><h2><span class="n">3</span>Terms</h2><div class="fields">
       <div class="f"><label for="nc-start">Start date</label><input type="date" id="nc-start" value="2026-11-01"></div>
       <div class="f"><label for="nc-months">Duration</label><select id="nc-months"><option value="12" selected>12 months</option><option value="6">6 months</option><option value="24">24 months</option></select></div>
@@ -820,12 +869,20 @@ function vNew(){
       <div class="f"><label for="nc-dep">Security deposit (AED)</label><input type="number" id="nc-dep" min="0" step="100"><span class="hint">Defaults to 5% of annual rent.</span></div>
       <div class="f"><label for="nc-twq">Tawtheeq contract no.</label><input type="text" id="nc-twq" placeholder="TWQ-2026-000000"></div>
       <div class="f"><label for="nc-twqend">Tawtheeq end date</label><input type="date" id="nc-twqend"><span class="hint">Renewal reminders start 60 days before.</span></div></div></section>
-    <section class="card sec"><h2><span class="n">4</span>Payment plan</h2>
+    <section class="card sec"><h2><span class="n">4</span>Tawtheeq details</h2><p class="muted" style="margin:0;font-size:13px">What DARI asks for when you register the contract. Fill what you have now. Anything missing is flagged on the unit page.</p><div class="fields">
+      <div class="f"><label for="nc-pid">Property / unit ID</label><input type="text" id="nc-pid"><span class="hint">As on the title deed or in DARI. Pre-filled from the building plot.</span></div>
+      <div class="f"><span class="lbl">Plot / community</span><output class="outv" id="nc-plot"></output></div>
+      <div class="f"><label for="nc-use">Usage</label><select id="nc-use"><option>Residential</option><option>Commercial</option></select></div>
+      <div class="f"><label for="nc-occ">Number of occupants</label><input type="number" id="nc-occ" min="1" max="20" placeholder="3"></div>
+      <div class="f"><span class="lbl">Owner (landlord)</span><output class="outv" id="nc-owner"></output></div>
+      <div class="f"><span class="lbl">Management agreement</span><output class="outv" id="nc-pma"></output><span class="hint">From the master lease. Owner details are kept under Landlords.</span></div></div>
+      <div class="f"><label for="nc-cond">Special conditions <span class="muted" style="font-weight:400">(optional)</span></label><textarea class="textarea" id="nc-cond" placeholder="e.g. One parking bay (B2-114). No pets. Chiller included."></textarea></div></section>
+    <section class="card sec"><h2><span class="n">5</span>Payment plan</h2>
       <div class="f"><span class="lbl" id="nc-plan-l">Number of payments</span><div class="seg" role="radiogroup" aria-labelledby="nc-plan-l" id="nc-plan">${[1,2,4,12].map(p=>`<label><input type="radio" name="nc-plan" value="${p}" ${p===4?'checked':''}><span>${p}<small>${p===1?'annual':p===2?'every 6 mo':p===4?'quarterly':'monthly'}</small></span></label>`).join('')}</div></div>
       <div class="f"><span class="lbl" id="nc-meth-l">Paid by</span><div class="seg" role="radiogroup" aria-labelledby="nc-meth-l"><label><input type="radio" name="nc-meth" value="cheque" checked><span>Post-dated cheques</span></label><label><input type="radio" name="nc-meth" value="transfer"><span>Bank transfer</span></label></div></div>
       <div class="fields" id="nc-cq"><div class="f"><label for="nc-bank">Cheque bank</label><select id="nc-bank"><option value="">Select bank</option>${BANKS.map(b=>`<option>${b}</option>`).join('')}</select></div>
       <div class="f"><label for="nc-chq">First cheque no.</label><input type="text" id="nc-chq" inputmode="numeric" placeholder="104221"><span class="hint">Following cheques are numbered in sequence. Edit any of them in the schedule.</span></div></div></section>
-    <section class="card sec"><h2><span class="n">5</span>Documents</h2><p class="muted" style="margin:0;font-size:13px">Attach the signed contract and supporting documents. PDF or photos. You can add more later from the unit page.</p><div id="nc-docs" class="doclist"></div></section>
+    <section class="card sec"><h2><span class="n">6</span>Documents</h2><p class="muted" style="margin:0;font-size:13px">Attach the signed contract and supporting documents. PDF or photos. You can add more later from the unit page.</p><div id="nc-docs" class="doclist"></div></section>
    </div>
    <div class="nc-side">
     <section class="card"><div class="cardhead"><h2>Payment schedule</h2><span class="sub" id="nc-total"></span></div><div id="nc-sched"></div></section>
@@ -847,7 +904,9 @@ function fillUnits(){
 function readForm(){
   const months=+$('nc-months').value,start=$('nc-start').value,method=radio('nc-meth');
   return {unitId:$('nc-u').value,ttype:radio('nc-tt'),name:$('nc-name').value.trim(),mob:$('nc-mob').value.replace(/\D/g,''),email:$('nc-email').value.trim(),lic:$('nc-lic').value.trim(),
-    start,months,rent:+$('nc-rent').value||0,dep:+$('nc-dep').value||0,twq:$('nc-twq').value.trim(),twqEnd:$('nc-twqend').value,plan:+radio('nc-plan'),method,bank:$('nc-bank').value,chq:$('nc-chq').value.replace(/\D/g,'')};
+    start,months,rent:+$('nc-rent').value||0,dep:+$('nc-dep').value||0,twq:$('nc-twq').value.trim(),twqEnd:$('nc-twqend').value,plan:+radio('nc-plan'),method,bank:$('nc-bank').value,chq:$('nc-chq').value.replace(/\D/g,''),
+    nat:$('nc-nat').value.trim(),eid:$('nc-eid').value.trim(),eidExp:$('nc-eidexp').value,pp:$('nc-pp').value.trim(),sig:$('nc-sig').value.trim(),sigEid:$('nc-sigeid').value.trim(),
+    pid:$('nc-pid').value.trim(),use:$('nc-use').value,occ:+$('nc-occ').value||null,cond:$('nc-cond').value.trim()};
 }
 function updateForm(){
   const f=readForm();
@@ -858,7 +917,12 @@ function updateForm(){
   if(!form.twqTouched&&end)$('nc-twqend').value=end;
   if(!form.depTouched)$('nc-dep').value=f.rent?Math.round(f.rent*0.05/100)*100:'';
   $('nc-cq').hidden=f.method!=='cheque';
-  $('nc-lic-f').hidden=f.ttype!=='company';$('nc-name-l').textContent=f.ttype==='company'?'Company name':'Full name';
+  document.querySelectorAll('#nc [data-ind]').forEach(x=>x.hidden=f.ttype==='company');document.querySelectorAll('#nc [data-co]').forEach(x=>x.hidden=f.ttype!=='company');
+  {const u=f.unitId?U[f.unitId]:null,l=u?leaseFor(u.id):null,ll=l?LL(l.landlordId):null;
+   if(!form.pidTouched)$('nc-pid').value=u?propId(u):'';f.pid=$('nc-pid').value;
+   $('nc-plot').textContent=u?B[u.buildingId].plot+' · '+B[u.buildingId].area:'—';
+   $('nc-owner').textContent=ll?ll.name+' · '+(ll.licence||'licence not on file'):u?'No master lease on this unit':'—';
+   $('nc-pma').textContent=l?l.id+' · until '+fd(l.end):'—';}$('nc-name-l').textContent=f.ttype==='company'?'Company name':'Full name';
   const cost=f.unitId?unitCost(f.unitId):0;
   $('nc-rent-hint').textContent=f.unitId&&cost?`Landlord rent on this unit: ${aed(cost)} / yr${f.rent?` · margin ${aed(f.rent*12/12-cost)}`:''}`:'';
   const sch=f.start&&f.rent?buildSchedule(f.start,f.months,f.rent,f.plan):[];
@@ -870,7 +934,8 @@ function updateForm(){
   const u=f.unitId?U[f.unitId]:null;
   $('nc-sum').innerHTML=`<dt>Unit</dt><dd>${u?`<span class="mono">${u.id}</span> · ${esc(B[u.buildingId].short)}`:'—'}</dd><dt>Tenant</dt><dd>${esc(f.name)||'—'}${f.mob?`<div class="mono muted" style="font-size:12px">${f.mob.length===9?fmob(f.mob):'+971 '+esc(f.mob)}</div>`:''}</dd>
     <dt>Term</dt><dd>${f.start?fd(f.start)+' – '+fd(end):'—'}</dd><dt>Rent</dt><dd class="mono">${f.rent?aed(f.rent)+' / yr':'—'}</dd><dt>Plan</dt><dd>${f.plan} × ${sch[0]?aed(sch[0].amount):'—'} by ${f.method==='cheque'?'cheque':'transfer'}</dd>
-    <dt>Documents</dt><dd>${(()=>{const n=Object.values(form.docs).reduce((s,a)=>s+a.length,0);return n+' attached'+(form.docs.contract.length?'':' <span style="color:var(--warn)">· signed contract not attached</span>');})()}</dd>`;
+    <dt>Documents</dt><dd>${(()=>{const n=Object.values(form.docs).reduce((s,a)=>s+a.length,0);return n+' attached'+(form.docs.contract.length?'':' <span style="color:var(--warn)">· signed contract not attached</span>');})()}</dd>
+    <dt>Tawtheeq</dt><dd>${(()=>{if(!f.unitId)return '—';const m=twqMissing(formTenant(f),formReg(f),f.unitId);return m.length?`<span style="color:var(--warn)">${m.length} detail${m.length>1?'s':''} missing</span><div class="muted" style="font-size:12px">${m.map(esc).join(', ')}</div>`:'<span style="color:var(--ok)">Ready to register</span>';})()}</dd>`;
   renderDocSlots();
 }
 const DOCSLOTS=[['contract','Signed tenancy contract'],['twq','Tawtheeq certificate'],['id','Emirates ID or passport'],['cheques','Cheque copies'],['other','Other documents']];
@@ -879,15 +944,18 @@ function renderDocSlots(){const el=$('nc-docs');if(!el)return;
   el.innerHTML=DOCSLOTS.map(([k])=>{const lab=slotLabel(k),fs=form.docs[k];
    return `<div class="doc"><div class="grow"><b style="font-weight:500">${lab}</b>${k==='cheques'||k==='other'?' <span class="muted" style="font-size:12px">optional</span>':''}${fs.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${fs.map((f,i)=>`<span class="chip plain" style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12px;font-weight:400">${esc(f)}<button type="button" class="link" style="color:var(--muted);font-size:15px;line-height:1;padding:0 2px" data-action="nc-doc-rm" data-slot="${k}" data-k="${i}" aria-label="Remove ${esc(f)}">×</button></span>`).join('')}</div>`:''}</div>
     ${fs.length?'<span class="chip ok">Attached</span>':''}<label class="btn sm filebtn">${fs.length?'Add more':'Upload'}<input type="file" data-doc="${k}" multiple accept=".pdf,image/*" aria-label="Upload ${lab}"></label></div>`;}).join('');}
+const formTenant=f=>{const co=f.ttype==='company';return {type:f.ttype,name:f.name,mobile:f.mob,email:f.email,licence:co?f.lic:'',nat:co?'':f.nat,eid:!co&&f.eid?fmtEid(f.eid):'',eidExp:co?'':f.eidExp,pp:co?'':f.pp,sig:co?f.sig:'',sigEid:co&&f.sigEid?fmtEid(f.sigEid):''};};
+const formReg=f=>({usage:f.use,propId:f.pid,occupants:f.occ,conditions:f.cond});
 function chequeNos(f,n){return Array.from({length:n},(_,k)=>(form.over[k]??(f.chq?String(+f.chq+k).padStart(f.chq.length,'0'):'')).trim());}
 function submitForm(){
   const f=readForm(),errs=[],mark=(id,bad)=>{const el=$(id);if(el)el.setAttribute('aria-invalid',bad?'true':'false');if(bad)errs.push(id);};
-  const msgs={'nc-u':'Choose a vacant unit','nc-name':'Enter the tenant name','nc-mob':'Enter a 9-digit UAE mobile number starting with 5','nc-start':'Choose a start date','nc-rent':'Enter the annual rent','nc-twq':'Enter the Tawtheeq contract number','nc-bank':'Choose the cheque bank','nc-chq':'Enter the first cheque number'};
+  const msgs={'nc-u':'Choose a vacant unit','nc-name':'Enter the tenant name','nc-mob':'Enter a 9-digit UAE mobile number starting with 5','nc-start':'Choose a start date','nc-rent':'Enter the annual rent','nc-twq':'Enter the Tawtheeq contract number','nc-bank':'Choose the cheque bank','nc-chq':'Enter the first cheque number','nc-eid':'Emirates ID should be 15 digits starting 784','nc-sigeid':'Signatory Emirates ID should be 15 digits starting 784','nc-eidexp':'The Emirates ID has expired. Ask for the renewed card'};
   mark('nc-u',!f.unitId);mark('nc-name',!f.name);mark('nc-mob',!/^5\d{8}$/.test(f.mob));mark('nc-start',!f.start);mark('nc-rent',!(f.rent>0));mark('nc-twq',!f.twq);
   if(f.method==='cheque'){mark('nc-bank',!f.bank);mark('nc-chq',!f.chq);}
+  if(f.ttype==='company')mark('nc-sigeid',!!f.sigEid&&!eidOk(f.sigEid));else{mark('nc-eid',!!f.eid&&!eidOk(f.eid));mark('nc-eidexp',!!f.eidExp&&f.eidExp<TODAY);}
   const box=$('nc-err');
   if(errs.length){box.hidden=false;box.className='errors';box.innerHTML=`<b>Fix ${errs.length} field${errs.length>1?'s':''} to create the contract</b><ul>${errs.map(e=>`<li>${msgs[e]}</li>`).join('')}</ul>`;$(errs[0]).focus();return;}
-  const c=makeContract({unitId:f.unitId,tenant:{type:f.ttype,name:f.name,mobile:f.mob,email:f.email,licence:f.ttype==='company'?f.lic:''},start:f.start,months:f.months,rent:f.rent,deposit:f.dep,plan:f.plan,method:f.method,bank:f.bank,chequeNos:chequeNos(f,f.plan),twqNo:f.twq,twqEnd:f.twqEnd});
+  const c=makeContract({unitId:f.unitId,tenant:formTenant(f),reg:formReg(f),start:f.start,months:f.months,rent:f.rent,deposit:f.dep,plan:f.plan,method:f.method,bank:f.bank,chequeNos:chequeNos(f,f.plan),twqNo:f.twq,twqEnd:f.twqEnd});
   c.docs=DOCSLOTS.flatMap(([k])=>form.docs[k].map(n=>({name:n,at:TODAY,kind:slotLabel(k)})));
   if(form.renew){const old=S.contracts.find(x=>x.id===form.renew);old.status='renewed';old.renewal='Renewed';}
   S.contracts.push(c);linkJoined(c);audit((form.renew?'Renewed contract':form.fromRes?'Created contract from MyC sign-up':'Created contract')+` · ${f.plan} payments`,f.unitId);
@@ -905,7 +973,7 @@ function bindForm(){
   el.addEventListener('input',e=>{const t=e.target;
     if(t.type==='file')return;
     if(t.dataset.row!==undefined){form.over[t.dataset.row]=t.value;return;}
-    if(t.id==='nc-twqend')form.twqTouched=true;if(t.id==='nc-dep')form.depTouched=true;
+    if(t.id==='nc-twqend')form.twqTouched=true;if(t.id==='nc-dep')form.depTouched=true;if(t.id==='nc-pid')form.pidTouched=true;
     if(t.id==='nc-chq'||t.name==='nc-plan'||t.id==='nc-months'||t.id==='nc-start')form.over={};
     if(t.getAttribute('aria-invalid')==='true')t.setAttribute('aria-invalid','false');
     updateForm();});
@@ -917,6 +985,8 @@ function bindForm(){
   if(form.renew){const o=S.contracts.find(x=>x.id===form.renew);
     document.querySelector(`input[name="nc-tt"][value="${o.tenant.type}"]`).checked=true;
     $('nc-name').value=o.tenant.name;$('nc-mob').value=o.tenant.mobile;$('nc-email').value=o.tenant.email||'';$('nc-lic').value=o.tenant.licence||'';
+    {const t=o.tenant,g=o.reg||{};$('nc-nat').value=t.nat||'';$('nc-eid').value=t.eid||'';$('nc-eidexp').value=t.eidExp||'';$('nc-pp').value=t.pp||'';$('nc-sig').value=t.sig||'';$('nc-sigeid').value=t.sigEid||'';
+     $('nc-use').value=g.usage||'Residential';$('nc-occ').value=g.occupants||'';$('nc-cond').value=g.conditions||'';if(g.propId){$('nc-pid').value=g.propId;form.pidTouched=true;}}
     $('nc-start').value=addDays(o.end,1);$('nc-rent').value=o.rent;
     document.querySelector(`input[name="nc-plan"][value="${o.plan}"]`).checked=true;document.querySelector(`input[name="nc-meth"][value="${o.method}"]`).checked=true;
     const bk=o.installments[0]&&o.installments[0].bank;if(bk)$('nc-bank').value=bk;}
@@ -928,7 +998,9 @@ function sampleForm(){
   $('nc-name').value='Daniel Okafor';$('nc-mob').value='50 412 7789';$('nc-email').value='daniel.okafor@example.com';
   $('nc-start').value='2026-11-01';$('nc-months').value='12';$('nc-rent').value='98000';$('nc-twq').value='TWQ-2026-418734';
   document.querySelector('input[name="nc-plan"][value="4"]').checked=true;document.querySelector('input[name="nc-meth"][value="cheque"]').checked=true;
-  $('nc-bank').value='ADCB';$('nc-chq').value='104221';form.over={};form.twqTouched=false;form.depTouched=false;
+  $('nc-bank').value='ADCB';$('nc-chq').value='104221';form.over={};form.twqTouched=false;form.depTouched=false;form.pidTouched=false;
+  document.querySelector('input[name="nc-tt"][value="individual"]').checked=true;
+  $('nc-nat').value='Nigeria';$('nc-eid').value='784-1988-4417263-2';$('nc-eidexp').value='2028-03-14';$('nc-pp').value='A09871234';$('nc-use').value='Residential';$('nc-occ').value='3';$('nc-cond').value='One parking bay (B2-114). No pets.';
   form.docs={contract:[`Tenancy contract ${form.unit} (signed).pdf`],twq:['Tawtheeq certificate.pdf'],id:['Emirates ID, Daniel Okafor.pdf'],cheques:['Cheques 104221 to 104224.jpg'],other:[]};
   document.querySelectorAll('#nc [aria-invalid]').forEach(x=>x.setAttribute('aria-invalid','false'));$('nc-err').hidden=true;
   updateForm();
@@ -1465,7 +1537,7 @@ let tt;function toast(m){const el=$('toast');el.textContent=m;el.hidden=false;el
 /* ---------- router ---------- */
 function go(name,p={}){
   if(!can(name)){toast(`${ROLES[S.viewAs].label} can't open that section`);return;}
-  route={...route,name,renew:null,fromRes:null,moveout:false,tedit:false,aform:null,afUnit:null,aimpOpen:false,aimpRows:null,vform:null,...p};if(name!=='collections')sel.clear();$('phone').hidden=true;render();window.scrollTo(0,0);}
+  route={...route,name,renew:null,fromRes:null,moveout:false,tedit:false,regedit:false,aform:null,afUnit:null,aimpOpen:false,aimpRows:null,vform:null,...p};if(name!=='collections')sel.clear();$('phone').hidden=true;render();window.scrollTo(0,0);}
 function render(){
   renderNav();const w=document.querySelector('#main .wrap');
   const banner=S.viewAs!=='manager'?`<div class="banner"><span>Viewing as <b>${ROLES[S.viewAs].label}</b> (${ROLES[S.viewAs].who}). Sections this role can't access are hidden.</span><button type="button" class="btn sm" data-action="viewas-reset">Back to portfolio manager</button></div>`:'';
@@ -1555,6 +1627,11 @@ const A={
   'vf-close':()=>{route.vform=null;render();},
   't-edit':()=>{route.tedit=true;render();setTimeout(()=>{const n=$('te-n');if(n)n.focus();},30);},
   't-cancel':()=>{route.tedit=false;render();},
+  'reg-edit':()=>{route.regedit=true;render();setTimeout(()=>{const n=$('rg-pid');if(n)n.focus();},30);},
+  'reg-cancel':()=>{route.regedit=false;render();},
+  'twq-copy':d=>{const c=S.contracts.find(x=>x.id===d.contract),its=twqItems(c.tenant,c.reg,c.unitId,c);let sec='',out=[];
+    its.forEach(x=>{if(x.sec!==sec){sec=x.sec;out.push((out.length?'\n':'')+sec.toUpperCase());}out.push(x.label+': '+(x.val||(x.opt?'-':'MISSING')));});
+    const txt=out.join('\n');try{navigator.clipboard.writeText(txt).then(()=>toast('Copied. Paste into DARI or send to whoever registers it.'),()=>toast('Copy was blocked by the browser'));}catch(e){toast('Copy was blocked by the browser');}},
   'nc-doc-rm':d=>{form.docs[d.slot].splice(+d.k,1);updateForm();},
   'res-create':d=>{const r=S.residents.find(x=>x.id===d.id);go('new',{unit:r.unitId,fromRes:r.id});},
   'res-remove':d=>{const r=S.residents.find(x=>x.id===d.id);S.residents=S.residents.filter(x=>x!==r);const c=contractFor(r.unitId);if(c)linkJoined(c);audit(`Removed ${r.name} from ${r.unitId} in MyC`,r.unitId);toast(`${r.name} removed from ${r.unitId}. They no longer see the building in MyC.`);render();},
@@ -1606,6 +1683,7 @@ document.addEventListener('submit',e=>{
   if(e.target.id==='af-form'){e.preventDefault();saveAsset();return;}
   if(e.target.id==='vf-form'){e.preventDefault();saveVendor();return;}
   if(e.target.id==='te-form'){e.preventDefault();saveTenant();return;}
+  if(e.target.id==='rg-form'){e.preventDefault();saveReg();return;}
   if(e.target.id==='ib-form'){e.preventDefault();if(!route.thread){const f=S.threads.slice().sort((a,b)=>b.ts-a.ts)[0];if(f)route.thread=f.unitId;}sendMsg();}
   if(e.target.id==='inv-form'){e.preventDefault();const n=$('inv-name').value.trim(),em=$('inv-email').value.trim();if(!n||!em){toast('Enter a name and work email to invite');return;}S.members.push({name:n,email:em,role:$('inv-role').value,status:'Invited'});audit(`Invited ${n} as ${ROLES[$('inv-role').value].label}`);render();toast('Invite sent to '+em);}
 });
