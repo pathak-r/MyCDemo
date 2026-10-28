@@ -646,7 +646,7 @@ function renewCard(cs){
      return `<div class="row"><span class="date" style="color:${col};font-weight:500">${d}d</span>
      <div class="grow"><button type="button" class="namebtn" data-action="open-unit" data-unit="${c.unitId}">${esc(c.tenant.name)}</button><span class="meta">${c.unitId} · ends ${fd(c.twqEnd)}</span></div>
      <span class="chip ${c.renewal==='Renewing'?'ok':c.renewal==='Moving out'?'warn':c.renewal==='Reminder sent'?'info':'plain'}">${esc(c.renewal||'Not contacted')}</span>
-     ${c.renewal==='Renewing'&&can('new')?`<button type="button" class="btn sm" data-action="renew" data-contract="${c.id}">Renew</button>`:c.renewal==='Moving out'?'':`<button type="button" class="btn sm" data-action="renew-remind" data-contract="${c.id}">Remind</button>`}</div>`;}).join(''):'<div class="empty">No renewals in the next 60 days.</div>'}</div></section>`;
+     ${c.renewal==='Renewing'&&can('new')?`<button type="button" class="btn sm" data-action="renew" data-contract="${c.id}">Renew</button>`:c.renewal==='Moving out'?(can('new')?`<button type="button" class="btn sm" data-action="mo-open" data-unit="${c.unitId}">Record move-out</button>`:''):`<button type="button" class="btn sm" data-action="renew-remind" data-contract="${c.id}">Remind</button>`}</div>`;}).join(''):'<div class="empty">No renewals in the next 60 days.</div>'}</div></section>`;
 }
 function maintCard(ts,title='Open maintenance'){
   const nw=ts.filter(t=>t.status==='new').length,ip=ts.length-nw;
@@ -806,7 +806,8 @@ function vUnit(){
       <dt>Security deposit</dt><dd class="mono">${aed(c.deposit)} <span class="muted" style="font-family:var(--sans)">held</span></dd>
       <dt>Tawtheeq no.</dt><dd class="mono">${esc(c.twqNo)}</dd><dt>Tawtheeq ends</dt><dd>${fd(c.twqEnd)} <span style="color:${twqLeft<=30?'var(--bad)':twqLeft<=60?'var(--warn)':'var(--muted)'}">· ${twqLeft} days left</span>${c.renewal?` · <span class="chip plain">${esc(c.renewal)}</span>`:''}</dd>
       <dt><label for="legal">Legal status</label></dt><dd><select id="legal" class="statussel" data-change="legal" data-contract="${c.id}">${['None','Notice served','Case filed','Judgment issued','Closed'].map(x=>`<option ${c.legal===x?'selected':''}>${x}</option>`).join('')}</select></dd></dl>
-      ${route.moveout?'':`<div><button type="button" class="btn sm" data-action="moveout">End contract / move-out</button></div>`}</section>`:''}
+      ${route.moveout?'':c.renewal==='Moving out'?`<div class="linkbox"><span class="chip warn">Moving out</span><p>${esc(first(t.name))} is leaving when the contract ends on ${fd(c.end)}. Record the move-out and deposit refund on the day.</p><button type="button" class="btn sm primary" data-action="moveout" data-contract="${c.id}">Record move-out</button><button type="button" class="btn sm ghost" data-action="ren-status" data-contract="${c.id}" data-v="">Not moving out</button></div>`
+        :`<div class="tools">${c.renewal==='Renewing'?'':`<button type="button" class="btn sm" data-action="ren-status" data-contract="${c.id}" data-v="Renewing">Tenant is renewing</button>`}<button type="button" class="btn sm" data-action="ren-status" data-contract="${c.id}" data-v="Moving out">Moving out at contract end</button><button type="button" class="btn sm ghost" data-action="moveout" data-contract="${c.id}">End contract now</button></div>`}</section>`:''}
    </div>
    ${mo}
    ${fin?twqCard(c):''}
@@ -1606,6 +1607,9 @@ const A={
     const lk=ok.filter(r=>contractFor(r.unit)&&contractFor(r.unit).joined).length;audit(`Imported ${ok.length} contracts from CSV`);imp=null;render();toast(`Imported ${ok.length} contracts · ${lk} matched to existing MyC sign-ups · ${ok.length-lk} need an invite card (Residents › Contract holders not on MyC)`);},
   moveout:()=>{route.moveout=true;render();},
   'moveout-cancel':()=>{route.moveout=false;render();},
+  'mo-open':d=>go('unit',{unit:d.unit,moveout:true}),
+  'ren-status':d=>{const c=ct(d.contract),v=d.v||null;c.renewal=v;audit(v?`Marked tenant as ${v.toLowerCase()}`:'Cleared moving-out status',c.unitId);render();
+    toast(v==='Moving out'?`${c.unitId} marked as moving out on ${fd(c.end)} · left out of the renewal forecast`:v==='Renewing'?`${c.unitId} marked as renewing · use Renew contract when the terms are agreed`:'Moving-out status cleared');},
   'moveout-confirm':d=>{const c=ct(d.contract),date=$('mo-date').value||TODAY,ded=Math.max(0,+$('mo-ded').value||0),reason=$('mo-reason').value.trim(),refund=Math.max(0,c.deposit-ded);
     c.status='ended';c.movedOut={date,ded,reason,refund};c.installments.forEach(i=>{if(i.due>date&&!settled(i))i.status='cancelled';});
     const t=S.threads.find(x=>x.unitId===c.unitId);if(t)S.threads=S.threads.filter(x=>x!==t);S.residents=S.residents.filter(r=>r.unitId!==c.unitId);
