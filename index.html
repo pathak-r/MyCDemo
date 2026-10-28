@@ -615,9 +615,9 @@ function renderNav(){
     <div class="orgcard"><span class="eyebrow">Organisation</span><b>Demo Properties LLC</b><span>${S.buildings.length} buildings · ${S.units.length} units · ${active().length} let</span></div>
     ${can('new')?`<button type="button" class="btn-new" data-action="new-contract">${svg('plus',16)}New contract</button>`:''}
     <nav class="nav" aria-label="Sections">
-      ${item('queue','inbox','Sign-up queue',queueUnits().length)}${item('overview','grid','Overview')}${item('collections','cash','Collections',att)}${item('landlords','key','Landlords &amp; leases')}
+      ${item('overview','grid','Overview')}${item('collections','cash','Collections',att)}${item('landlords','key','Landlords &amp; leases')}
       ${item('residents','users','Residents')}${item('inbox','chat','Inbox',unread)}${item('maintenance','tool','Maintenance',nw)}${item('assets','box','Assets &amp; vendors')}
-      ${item('reports','chart','Reports')}${item('settings','gear','Team &amp; settings')}
+      ${item('reports','chart','Reports')}${item('settings','gear','Team &amp; settings')}${item('queue','inbox','Sign-up queue',queueUnits().length)}
     </nav>
     <div class="side-foot">
       <div class="me"><span class="avatar">${r.who.split(' ').map(x=>x[0]).join('').replace('.','')}</span><span>${r.who}<small>${r.label} · Demo Properties</small></span></div>
