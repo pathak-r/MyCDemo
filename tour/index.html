@@ -1,0 +1,2038 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MyCommunity UAE — Client Portal &amp; MyC Resident App</title>
+<meta name="description" content="One portal for your team. One app for your residents.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<style>
+:root {
+  --bg: #F5F0E8;
+  --paper: #FBF7EF;
+  --white: #FFFFFF;
+  --notice: #EFE3CE;
+  --ink: #161513;
+  --ink-2: #413B34;
+  --muted: #756C61;
+  --rule: #E2D9CA;
+  --accent: #B8472A;
+  --accent-hover: #9E391F;
+
+  /* Portal palette (matches actual Client Portal) */
+  --p-bg: #F6F6F2;
+  --p-side: #0E0F11;
+  --p-side-hi: #202227;
+  --p-side-ink: #E9E8E3;
+  --p-side-muted: #989892;
+  --p-ink: #111315;
+  --p-muted: #63666D;
+  --p-rule: #E5E4DE;
+  --p-navy: #1A2A40;
+  --p-navy-bg: #E7ECF4;
+  --ok: #156C35;
+  --ok-bg: #E3F2E7;
+  --warn: #855100;
+  --warn-bg: #F9EDD2;
+  --bad: #B42318;
+  --bad-bg: #FBE5E2;
+  --wa: #146C38;
+
+  --serif: 'Fraunces', Georgia, serif;
+  --news: 'Newsreader', Georgia, serif;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; }
+h1, h2, h3, h4, p { margin: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* ---------- Minimal Page Header ---------- */
+.top {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.brand-m {
+  width: 28px;
+  height: 28px;
+  border: 1.4px solid var(--ink);
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  background: var(--paper);
+}
+.brand-txt {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.brand-txt span { color: var(--accent); font-weight: 500; }
+
+.top-right { display: flex; align-items: center; gap: 10px; }
+.link-portal {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid #CBBFA9;
+  background: var(--paper);
+}
+.link-portal:hover { background: var(--white); border-color: var(--ink); }
+.cta-pill {
+  background: var(--accent);
+  color: #FFF;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 999px;
+  transition: background 0.15s;
+}
+.cta-pill:hover { background: var(--accent-hover); }
+@media (max-width: 620px) { .link-portal { display: none; } }
+
+/* ---------- Page Canvas ---------- */
+.page {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 18px 24px 28px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+.hero {
+  text-align: center;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(26px, 3.3vw, 38px);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+.hero h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
+.cap-strip {
+  width: 100%;
+  padding: 12px 16px;
+  border-top: 1px solid #D6CBB8;
+  border-bottom: 1px solid #D6CBB8;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 12px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.cap-item {
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+}
+.cap-dot {
+  color: #AE9F8C;
+  font-weight: 600;
+  user-select: none;
+}
+.btn-dark-lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.12s;
+}
+.btn-dark-lg:hover { background: #2D2A26; }
+.btn-dark-lg:active { transform: translateY(1px); }
+
+/* ---------- Side-by-Side Stage ---------- */
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 54px 322px;
+  gap: 10px;
+  align-items: stretch;
+}
+@media (max-width: 1080px) {
+  .stage {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.col-wrap { display: flex; flex-direction: column; min-width: 0; }
+.pane-label {
+  margin-bottom: 10px;
+  padding: 0 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.pane-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.pane-title b { color: var(--ink); font-weight: 700; }
+.pane-title.app b { color: var(--accent); }
+.pane-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--p-side);
+  flex: none;
+}
+.pane-title.app .pane-dot { background: var(--accent); }
+.pane-os {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid #CFC3B0;
+  padding: 2.5px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.reset-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: underline;
+}
+.reset-link:hover { color: var(--ink); }
+
+/* ---------- Left: Real Client Portal Window ---------- */
+.portal-frame {
+  flex: 1;
+  min-height: 548px;
+  background: var(--p-bg);
+  color: var(--p-ink);
+  border: 1px solid #CFD0C8;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(22, 21, 19, 0.1);
+  display: grid;
+  grid-template-columns: 196px minmax(0, 1fr);
+}
+@media (max-width: 760px) {
+  .portal-frame {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+}
+
+/* Portal Dark Sidebar */
+.p-side {
+  background: var(--p-side);
+  color: var(--p-side-ink);
+  padding: 18px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.p-brand { padding: 0 8px; }
+.p-brand small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--p-side-muted);
+}
+.p-brand b { font-size: 15px; font-weight: 600; }
+.p-org {
+  background: var(--p-side-hi);
+  border-radius: 9px;
+  padding: 9px 10px;
+  font-size: 12px;
+}
+.p-org b { display: block; font-size: 12.5px; margin-bottom: 1px; }
+.p-org span { color: var(--p-side-muted); font-size: 11.5px; }
+
+.p-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.p-nav button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: #C9C8C2;
+  font-size: 13px;
+  text-align: left;
+  width: 100%;
+  transition: background 0.12s, color 0.12s;
+}
+.p-nav button:hover { background: var(--p-side-hi); color: #FFF; }
+.p-nav button[aria-current="page"] {
+  background: var(--p-side-hi);
+  color: #FFF;
+  font-weight: 600;
+}
+.p-nav svg { width: 15px; height: 15px; flex: none; opacity: 0.85; }
+.p-badge {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #D63B2C;
+  color: #FFF;
+}
+.p-badge.soft {
+  background: #2E323B;
+  color: #C9D5EC;
+}
+.p-side-foot {
+  margin-top: auto;
+  padding: 10px 8px 0;
+  border-top: 1px solid #23252A;
+  font-size: 11.5px;
+  color: var(--p-side-muted);
+}
+.p-side-foot a {
+  color: #AFC6ED;
+  text-decoration: none;
+  font-weight: 500;
+}
+.p-side-foot a:hover { text-decoration: underline; }
+
+@media (max-width: 760px) {
+  .p-brand, .p-org, .p-side-foot { display: none; }
+  .p-side { padding: 10px; overflow-x: auto; }
+  .p-nav { flex-direction: row; width: max-content; gap: 6px; }
+  .p-nav button { width: auto; white-space: nowrap; }
+}
+
+/* Portal Main Workspace */
+.p-main {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  overflow-y: auto;
+}
+.p-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px 14px;
+}
+.p-eyebrow {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--p-muted);
+}
+.p-head h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin-top: 2px;
+}
+.p-head-sub {
+  font-size: 12.5px;
+  color: var(--p-muted);
+}
+
+.p-grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 640px) { .p-grid2 { grid-template-columns: 1fr; } }
+
+.p-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 580px) { .p-kpis { grid-template-columns: 1fr; } }
+.p-kpi {
+  background: var(--white);
+  border: 1px solid var(--p-rule);
+  border-radius: 10px;
+  padding: 11px 13px;
+}
+.p-kpi span { display: block; font-size: 11.5px; color: var(--p-muted); }
+.p-kpi b {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+.p-card {
+  background: var(--white);
+  border: 1px solid var(--p-rule);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.p-card-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.p-card-hd h3 { font-size: 14px; font-weight: 600; }
+.p-card-hd span { font-size: 12px; color: var(--p-muted); }
+
+.p-list { display: flex; flex-direction: column; }
+.p-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--p-rule);
+}
+.p-row:first-child { border-top: 0; padding-top: 2px; }
+.p-row:last-child { padding-bottom: 2px; }
+.p-date {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--p-muted);
+  width: 46px;
+  flex: none;
+}
+.p-grow { flex: 1; min-width: 0; }
+.p-grow b { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-grow small { display: block; font-size: 11.5px; color: var(--p-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Clean Portal Tables */
+.table-wrap { overflow-x: auto; margin: 0 -16px; padding: 0 16px; }
+table.pt { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.pt th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--p-muted);
+  padding: 6px 8px 8px;
+  border-bottom: 1px solid #D6D4CC;
+  white-space: nowrap;
+}
+table.pt td {
+  padding: 9px 8px;
+  border-bottom: 1px solid var(--p-rule);
+  vertical-align: middle;
+}
+table.pt tr:last-child td { border-bottom: 0; }
+table.pt tr.hi td { background: #ECF8F0; transition: background 0.4s; }
+table.pt .r { text-align: right; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2.5px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.chip.ok { background: var(--ok-bg); color: var(--ok); }
+.chip.warn { background: var(--warn-bg); color: var(--warn); }
+.chip.bad { background: var(--bad-bg); color: var(--bad); }
+.chip.info { background: var(--p-navy-bg); color: var(--p-navy); }
+.chip.plain { background: #EFECE6; color: #51545B; }
+
+.pbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 29px;
+  padding: 0 10px;
+  border-radius: 7px;
+  border: 1px solid #CFD0C8;
+  background: var(--white);
+  color: var(--p-ink);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.pbtn:hover { background: #F2F1EC; }
+.pbtn.pri { background: var(--p-navy); border-color: var(--p-navy); color: #FFF; }
+.pbtn.pri:hover { filter: brightness(1.14); }
+.pbtn.wa { background: var(--wa); border-color: var(--wa); color: #FFF; }
+.pbtn.wa:hover { filter: brightness(1.1); }
+
+.glow {
+  box-shadow: 0 0 0 0 rgba(184, 71, 42, 0.5);
+  animation: pulse 1.9s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(184, 71, 42, 0.48); }
+  70% { box-shadow: 0 0 0 8px rgba(184, 71, 42, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(184, 71, 42, 0); }
+}
+
+/* Mini Quick Tiles on Overview */
+.quick-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 600px) { .quick-strip { grid-template-columns: 1fr; } }
+.q-tile {
+  background: var(--white);
+  border: 1px solid var(--p-rule);
+  border-radius: 10px;
+  padding: 11px 13px;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.q-tile:hover { border-color: #B8B6AC; background: #FDFDFB; }
+.q-tile b { display: block; font-size: 13px; font-weight: 600; }
+.q-tile span { font-size: 11.5px; color: var(--p-muted); }
+.q-arr { color: var(--p-muted); font-size: 14px; }
+
+/* Portal Split Inbox */
+.p-inbox {
+  background: var(--white);
+  border: 1px solid var(--p-rule);
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  flex: 1;
+  min-height: 380px;
+  overflow: hidden;
+}
+@media (max-width: 600px) { .p-inbox { grid-template-columns: 1fr; } }
+.ib-threads {
+  border-right: 1px solid var(--p-rule);
+  display: flex;
+  flex-direction: column;
+}
+.ib-th {
+  border: 0;
+  border-bottom: 1px solid var(--p-rule);
+  background: none;
+  padding: 11px 12px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ib-th:hover { background: #F7F6F2; }
+.ib-th.cur { background: var(--p-navy-bg); }
+.ib-th-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.ib-th b { font-size: 12.5px; font-weight: 600; }
+.ib-th small { font-size: 11.5px; color: var(--p-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.u-dot { width: 7px; height: 7px; border-radius: 99px; background: #2756D9; flex: none; }
+
+.ib-chat { display: flex; flex-direction: column; min-width: 0; }
+.ib-head {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--p-rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.ib-msgs {
+  flex: 1;
+  background: var(--p-bg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+.p-msg {
+  max-width: 82%;
+  padding: 8px 11px;
+  border-radius: 11px;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.p-msg.t { align-self: flex-start; background: var(--white); border: 1px solid var(--p-rule); }
+.p-msg.m { align-self: flex-end; background: var(--p-navy); color: #FFF; }
+.p-msg small { display: block; font-size: 10px; opacity: 0.7; margin-top: 3px; }
+.ib-foot {
+  padding: 9px 12px;
+  border-top: 1px solid var(--p-rule);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.ib-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.ib-chip {
+  border: 1px solid #D3D1C9;
+  background: #FAF9F6;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  color: #3A3D44;
+}
+.ib-chip:hover { background: #EFECE5; }
+.ib-send-row { display: flex; gap: 7px; }
+.ib-send-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid #CFD0C8;
+  border-radius: 7px;
+  font-size: 12.5px;
+}
+
+/* Sub-tabs inside Reports */
+.subtabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 2px;
+  border-bottom: 1px solid #D6D4CC;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.subtabs::-webkit-scrollbar { display: none; }
+.subtabs button {
+  border: 0;
+  background: none;
+  padding: 7px 9px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--p-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+}
+.subtabs button:hover { color: var(--p-ink); }
+.subtabs button.on { color: var(--p-ink); border-bottom-color: var(--p-ink); font-weight: 600; }
+.bar-track { flex: 1; height: 6px; background: #EAE8E1; border-radius: 99px; overflow: hidden; min-width: 60px; }
+.bar-fill { height: 100%; background: var(--p-navy); border-radius: 99px; }
+
+/* ---------- Center Sync Connector ---------- */
+.bridge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.bridge-ic {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  color: var(--muted);
+  transition: all 0.25s ease;
+}
+.bridge-ic.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #FFF;
+  transform: scale(1.12);
+  box-shadow: 0 8px 20px rgba(184, 71, 42, 0.3);
+}
+.bridge-lbl {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--muted);
+  text-align: center;
+  min-height: 13px;
+}
+@media (max-width: 1080px) { .bridge { flex-direction: row; } }
+
+/* ---------- Right: Authentic MyC Resident Phone ---------- */
+.phone-col { width: 322px; max-width: 100%; justify-self: center; }
+.phone {
+  flex: 1;
+  background: #1A1A1C;
+  border-radius: 42px;
+  padding: 10px;
+  box-shadow: 0 22px 54px rgba(22, 21, 19, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+.screen {
+  flex: 1;
+  min-height: 528px;
+  background: #F5EFE6;
+  color: #1B1B1B;
+  border-radius: 33px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+.s-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.s-island { width: 68px; height: 18px; border-radius: 99px; background: #141416; }
+
+.push-toast {
+  position: absolute;
+  top: 34px;
+  left: 10px;
+  right: 10px;
+  z-index: 15;
+  background: rgba(24, 22, 20, 0.95);
+  color: #FBF7EF;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  animation: drop 0.24s ease-out;
+}
+@keyframes drop {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.push-m {
+  width: 25px;
+  height: 25px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #FFF;
+  font-family: var(--serif);
+  font-style: italic;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.push-toast b { display: block; font-size: 11.5px; }
+.push-toast span { display: block; font-size: 11px; color: #DDD5C9; }
+
+.m-body {
+  flex: 1;
+  padding: 8px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+.m-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.m-mark { display: flex; align-items: center; gap: 7px; }
+.m-box {
+  width: 22px;
+  height: 22px;
+  border: 1.2px solid #1B1B1B;
+  border-radius: 2px;
+  display: grid;
+  place-items: center;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+}
+.m-bname {
+  font-family: var(--news);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.m-pill {
+  background: #1B1B1B;
+  color: #FBF7EF;
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-family: var(--news);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.m-hero { font-family: var(--serif); font-size: 22px; line-height: 1.15; letter-spacing: -0.02em; }
+.m-hero em { font-style: italic; font-weight: 400; }
+.m-meta {
+  font-family: var(--news);
+  font-size: 12px;
+  color: #7A6F62;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #D9CFBE;
+}
+.m-meta i { color: var(--accent); font-style: normal; font-size: 9px; margin-right: 4px; }
+
+.m-sec {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.m-notice {
+  background: var(--notice);
+  border-radius: 7px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.m-eye {
+  font-family: var(--news);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.m-notice h4 { font-family: var(--serif); font-size: 14px; font-weight: 500; }
+.m-notice p { font-family: var(--news); font-size: 12px; color: #3C342A; line-height: 1.36; }
+
+.m-card {
+  background: var(--paper);
+  border: 1px solid #D9CFBE;
+  border-radius: 8px;
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--news);
+}
+.m-input {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid #D9CFBE;
+  border-radius: 5px;
+  background: #FFF;
+  font-family: var(--news);
+  font-size: 12.5px;
+}
+.m-btn {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--accent);
+  color: #FFF;
+  font-family: var(--news);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-top: auto;
+}
+.m-btn:hover { background: var(--accent-hover); }
+
+.m-bub {
+  padding: 9px 11px;
+  border-radius: 11px;
+  font-family: var(--news);
+  font-size: 12.5px;
+  line-height: 1.38;
+  max-width: 90%;
+}
+.m-bub.in { background: var(--notice); align-self: flex-start; }
+.m-bub.out { background: #1B1B1B; color: var(--paper); align-self: flex-end; }
+
+.m-tabbar {
+  background: var(--paper);
+  border-top: 1px solid #D9CFBE;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: end;
+  padding: 6px 4px 9px;
+}
+.m-tab {
+  border: 0;
+  background: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--news);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7A6F62;
+}
+.m-tab.on { color: var(--accent); font-weight: 600; }
+.m-fab {
+  width: 34px;
+  height: 34px;
+  border-radius: 99px;
+  margin-top: -13px;
+  background: var(--accent);
+  color: #FFF;
+  border: 2px solid var(--paper);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+}
+
+/* ---------- Quiet Bottom Bar ---------- */
+.bottom-strip {
+  border-top: 1px solid var(--rule);
+  padding-top: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.facts span::before { content: "✓ "; color: var(--accent); font-weight: 600; }
+.bottom-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn-outline {
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 1px solid #CBBFA9;
+  background: var(--paper);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.btn-outline:hover { background: var(--white); }
+.btn-email {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #FFF;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.btn-email:hover { background: var(--accent-hover); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a href="#" class="brand">
+    <span class="brand-m">m</span>
+    <span class="brand-txt">MyCommunity <span>UAE</span></span>
+  </a>
+  <div class="top-right">
+    <a class="cta-pill" href="mailto:hello@mycommunityuae.com?subject=MyCommunity%20UAE">hello@mycommunityuae.com</a>
+  </div>
+</header>
+
+<main class="page">
+  <div class="hero">
+    <h1>One portal for your team. One app for your <em>residents.</em></h1>
+    <div class="cap-strip">
+      <span class="cap-item">Tawtheeq contracts</span><span class="cap-dot" aria-hidden="true">·</span>
+      <span class="cap-item">In-app payment &amp; renewal reminders</span><span class="cap-dot" aria-hidden="true">·</span>
+      <span class="cap-item">Direct tenant messaging</span><span class="cap-dot" aria-hidden="true">·</span>
+      <span class="cap-item">Maintenance requests</span><span class="cap-dot" aria-hidden="true">·</span>
+      <span class="cap-item">Asset tracking</span><span class="cap-dot" aria-hidden="true">·</span>
+      <span class="cap-item">Occupancy &amp; collection reports</span>
+    </div>
+  </div>
+
+  <section class="stage" aria-label="Client Portal and MyC App">
+    <!-- Left: Real Client Portal (Curated) -->
+    <div class="col-wrap">
+      <div class="pane-label">
+        <span class="pane-title"><i class="pane-dot" aria-hidden="true"></i>Your Team · <b>Client Portal</b></span>
+        <button type="button" class="reset-link" id="reset-btn">↺ Reset demo</button>
+      </div>
+      <div class="portal-frame">
+        <aside class="p-side" aria-label="Portal sections">
+          <div class="p-brand"><small>MyCommunity</small><b>Client Portal</b></div>
+          <div class="p-org"><b>Marina View Tower</b><span>32 units · Abu Dhabi</span></div>
+          <nav class="p-nav" id="p-nav"></nav>
+          <div class="p-side-foot">
+            Master leases, DARI copy &amp; full data in <a href="./portal.html">Full Sandbox →</a>
+          </div>
+        </aside>
+        <div class="p-main" id="p-main"></div>
+      </div>
+    </div>
+
+    <!-- Center Sync -->
+    <div class="bridge" aria-hidden="true">
+      <div class="bridge-ic" id="bridge-ic">⇄</div>
+      <div class="bridge-lbl" id="bridge-lbl"></div>
+    </div>
+
+    <!-- Right: Authentic MyC Resident App -->
+    <div class="col-wrap phone-col">
+      <div class="pane-label">
+        <span class="pane-title app"><i class="pane-dot" aria-hidden="true"></i>Your Resident · <b>MyC App</b></span>
+        <span class="pane-os">iOS &amp; Android</span>
+      </div>
+      <div class="phone">
+        <div class="screen">
+          <div class="s-status">
+            <span>9:41</span>
+            <div class="s-island"></div>
+            <span style="font-size:10.5px">5G</span>
+          </div>
+          <div id="push-slot"></div>
+          <div class="m-body" id="m-body"></div>
+          <div class="m-tabbar" id="m-tabs"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bottom-strip">
+    <div class="facts">
+      <span>Residents onboard themselves via MyC</span>
+      <span>WhatsApp vendor dispatch</span>
+      <span>No login required to try</span>
+    </div>
+    <div class="bottom-actions">
+      <a class="btn-dark-lg" href="./portal.html">Try full portal with sample portfolio →</a>
+      <a class="btn-email" href="mailto:hello@mycommunityuae.com?subject=MyCommunity%20UAE">hello@mycommunityuae.com</a>
+    </div>
+  </footer>
+</main>
+
+<script>
+(function () {
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  const ICONS = {
+    overview: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>',
+    residents: '<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-1.5-5-4-5.7"/>',
+    collections: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
+    inbox: '<path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z"/>',
+    maintenance: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/>',
+    assets: '<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+    reports: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'
+  };
+  const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>`;
+
+  let view = 'overview';
+  let pushTimer = null;
+
+  function seedState() {
+    return {
+      // Phone mode: 'home' | 'chat' | 'signup' | 'maint' | 'market' | 'events'
+      phoneMode: 'home',
+      phoneWho: 'Priya',
+      phoneUnit: 'MV-0204',
+
+      // Overview & Collections reminders
+      reminded: { priya: false, omar: false, elena: false, karim: false },
+      clearedAisha: false,
+
+      // Residents self-onboarding via MyC
+      danielJoined: false,
+      danielContracted: false,
+      olaContracted: false,
+
+      // Inbox threads
+      activeThread: 'MV-0204',
+      threads: {
+        'MV-0204': {
+          name: 'Priya Sharma',
+          meta: 'AED 76,000 / yr · Tawtheeq ends 14 Feb 2027',
+          unread: false,
+          msgs: [
+            { from: 't', text: 'Hi, can we get a second parking access card?', at: '08:40' },
+            { from: 'm', text: 'Sure — pass by reception with your Emirates ID.', at: '08:52' }
+          ]
+        },
+        'MV-0201': {
+          name: 'Karim Bakr',
+          meta: 'AED 65,000 / yr · Cheque #434481 bounced',
+          unread: true,
+          msgs: [
+            { from: 'm', text: 'Cheque #434481 (AED 16,250) was returned by RAKBANK. Please arrange replacement.', at: 'Yesterday', tag: 'Returned Cheque' },
+            { from: 't', text: 'Sorry about that — I will bring a replacement cheque tomorrow morning.', at: 'Yesterday' }
+          ]
+        },
+        'MV-0501': {
+          name: 'Elena Rossi',
+          meta: 'AED 76,000 / yr · Ends 13 Nov (18d)',
+          unread: true,
+          msgs: [
+            { from: 't', text: 'Hello! We would like to renew for another year.', at: '09:12' }
+          ]
+        }
+      },
+
+      // Maintenance
+      acReported: false,
+      acAssigned: false,
+
+      // Assets
+      acServiced: false,
+
+      // Reports sub-tab
+      rtab: 'aging',
+      stmtApplied: false
+    };
+  }
+
+  let S = seedState();
+
+  function pulse(arrow, label) {
+    const ic = document.getElementById('bridge-ic');
+    const lb = document.getElementById('bridge-lbl');
+    ic.textContent = arrow;
+    lb.textContent = label;
+    ic.classList.add('on');
+    clearTimeout(ic._t);
+    ic._t = setTimeout(() => {
+      ic.classList.remove('on');
+      ic.textContent = '⇄';
+      lb.textContent = '';
+    }, 1700);
+  }
+
+  function showPush(title, text) {
+    const slot = document.getElementById('push-slot');
+    slot.innerHTML = `<div class="push-toast"><div class="push-m">m</div><div><b>${esc(title)}</b><span>${esc(text)}</span></div></div>`;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(() => { slot.innerHTML = ''; }, 3800);
+  }
+
+  /* ---------- Sidebar Navigation ---------- */
+  function renderNav() {
+    const unread = Object.values(S.threads).filter(t => t.unread).length;
+    const queueCnt = (!S.danielJoined ? 1 : (!S.danielContracted ? 2 : 1)) - (S.olaContracted ? 1 : 0);
+    const maintNew = S.acReported && !S.acAssigned ? 1 : 0;
+    const colAttn = (S.reminded.karim ? 0 : 1) + (S.reminded.priya ? 0 : 1);
+
+    const items = [
+      ['overview', 'Overview', 0],
+      ['residents', 'Residents', queueCnt],
+      ['collections', 'Collections', colAttn],
+      ['inbox', 'Inbox', unread],
+      ['maintenance', 'Maintenance', maintNew],
+      ['assets', 'Assets', S.acServiced ? 0 : 1],
+      ['reports', 'Reports', 0]
+    ];
+
+    document.getElementById('p-nav').innerHTML = items.map(([k, label, cnt]) => `
+      <button type="button" data-nav="${k}" ${view === k ? 'aria-current="page"' : ''}>
+        ${svg(k)}<span>${label}</span>
+        ${cnt > 0 ? `<span class="p-badge ${k === 'residents' ? 'soft' : ''}">${cnt}</span>` : ''}
+      </button>
+    `).join('');
+  }
+
+  /* ---------- Portal Section Renderers ---------- */
+  function vOverview() {
+    const r = S.reminded;
+    const anyReminded = r.priya || r.omar || r.elena;
+    return `
+      <div class="p-head">
+        <div>
+          <span class="p-eyebrow">Overview · 26 Oct 2026</span>
+          <h2>Marina View Tower</h2>
+        </div>
+        <span class="p-head-sub">32 units · 30 let · <span class="mono">94%</span> occupied</span>
+      </div>
+
+      <div class="p-grid2">
+        <section class="p-card">
+          <div class="p-card-hd">
+            <h3>Upcoming payment reminders</h3>
+            <span class="mono">Due this week</span>
+          </div>
+          <div class="p-list">
+            <div class="p-row">
+              <span class="p-date">01 NOV</span>
+              <div class="p-grow">
+                <b>Priya Sharma</b>
+                <small>MV-0204 · Cheque #510030 · AED 19,000</small>
+              </div>
+              ${r.priya
+                ? '<span class="chip ok">✓ Sent</span>'
+                : `<button type="button" class="pbtn pri ${!anyReminded ? 'glow' : ''}" data-act="rem-priya">Remind</button>`}
+            </div>
+            <div class="p-row">
+              <span class="p-date">03 NOV</span>
+              <div class="p-grow">
+                <b>Omar Haddad</b>
+                <small>MV-0601 · Bank transfer · AED 16,250</small>
+              </div>
+              ${r.omar
+                ? '<span class="chip ok">✓ Sent</span>'
+                : '<button type="button" class="pbtn" data-act="rem-omar">Remind</button>'}
+            </div>
+          </div>
+        </section>
+
+        <section class="p-card">
+          <div class="p-card-hd">
+            <h3>Upcoming renewal reminders</h3>
+            <span>Tawtheeq &lt; 60d</span>
+          </div>
+          <div class="p-list">
+            <div class="p-row">
+              <span class="p-date" style="color:var(--bad);font-weight:600">18d</span>
+              <div class="p-grow">
+                <b>Elena Rossi</b>
+                <small>MV-0501 · Ends 13 Nov · AED 76,000</small>
+              </div>
+              ${r.elena
+                ? '<span class="chip ok">✓ Sent</span>'
+                : '<button type="button" class="pbtn" data-act="rem-elena">Remind</button>'}
+            </div>
+            <div class="p-row">
+              <span class="p-date" style="color:var(--warn);font-weight:600">42d</span>
+              <div class="p-grow">
+                <b>James Walker</b>
+                <small>MV-0703 · Ends 07 Dec · AED 104,000</small>
+              </div>
+              <span class="chip ok">Renewing</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="quick-strip">
+        <button type="button" class="q-tile" data-nav="residents">
+          <div>
+            <b>${S.danielJoined ? '2 recent MyC sign-ups' : 'Residents self-onboarding'}</b>
+            <span>Try joining from the MyC phone</span>
+          </div>
+          <span class="q-arr">→</span>
+        </button>
+        <button type="button" class="q-tile" data-nav="inbox">
+          <div>
+            <b>Direct resident inbox</b>
+            <span>Messages sync live with MyC</span>
+          </div>
+          <span class="q-arr">→</span>
+        </button>
+        <button type="button" class="q-tile" data-nav="maintenance">
+          <div>
+            <b>${S.acReported ? '2 open tickets' : '1 open ticket'}</b>
+            <span>Report issues &amp; WhatsApp vendors</span>
+          </div>
+          <span class="q-arr">→</span>
+        </button>
+      </div>
+    `;
+  }
+
+  function vResidents() {
+    return `
+      <div class="p-head">
+        <div>
+          <span class="p-eyebrow">Residents · App Onboarding</span>
+          <h2>People on MyC</h2>
+        </div>
+        <span class="p-head-sub">Residents sign up in MyC — building &amp; unit data populates automatically</span>
+      </div>
+
+      <div class="p-kpis">
+        <div class="p-kpi"><span>Residents on MyC</span><b>${S.danielJoined ? '45' : '44'}</b></div>
+        <div class="p-kpi"><span>Apartments joined</span><b>${S.danielJoined ? '30' : '29'} / 32</b></div>
+        <div class="p-kpi"><span>Waiting for contract</span><b>${(S.danielJoined && !S.danielContracted ? 1 : 0) + (!S.olaContracted ? 1 : 0)}</b></div>
+      </div>
+
+      <section class="p-card">
+        <div class="table-wrap">
+          <table class="pt">
+            <thead>
+              <tr><th>Resident</th><th>Unit</th><th>Mobile</th><th>Status</th><th class="r">Action</th></tr>
+            </thead>
+            <tbody>
+              ${S.danielJoined ? `
+                <tr class="hi">
+                  <td><b>Daniel Okafor</b></td>
+                  <td class="mono">MV-0402</td>
+                  <td class="mono">+971 50 412 7789</td>
+                  <td>${S.danielContracted ? '<span class="chip ok">Contract holder</span>' : '<span class="chip info">Joined just now</span>'}</td>
+                  <td class="r">${S.danielContracted ? '<span class="mono" style="color:var(--ok)">✓ Linked</span>' : '<button type="button" class="pbtn pri glow" data-act="contract-daniel">Add contract</button>'}</td>
+                </tr>
+              ` : ''}
+              <tr class="${S.olaContracted ? 'hi' : ''}">
+                <td><b>Ola Nilsen</b></td>
+                <td class="mono">MV-0103</td>
+                <td class="mono">+971 55 465 4991</td>
+                <td>${S.olaContracted ? '<span class="chip ok">Contract holder</span>' : '<span class="chip warn">Signed up · No contract</span>'}</td>
+                <td class="r">${S.olaContracted ? '<span class="mono" style="color:var(--ok)">✓ Linked</span>' : '<button type="button" class="pbtn" data-act="contract-ola">Add contract</button>'}</td>
+              </tr>
+              <tr>
+                <td><b>Priya Sharma</b></td>
+                <td class="mono">MV-0204</td>
+                <td class="mono">+971 50 881 3402</td>
+                <td><span class="chip ok">Contract holder</span></td>
+                <td class="r"><button type="button" class="pbtn" data-act="chat-unit" data-u="MV-0204">Message</button></td>
+              </tr>
+              <tr>
+                <td><b>Rohan Sharma</b></td>
+                <td class="mono">MV-0204</td>
+                <td class="mono">+971 52 910 4418</td>
+                <td><span class="chip plain">Household</span></td>
+                <td class="r"><span style="color:var(--p-muted);font-size:11.5px">Notices &amp; maint.</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }
+
+  function vCollections() {
+    const colAmt = S.clearedAisha ? 129250 : 106750;
+    const colPct = Math.round((colAmt / 142000) * 100);
+    return `
+      <div class="p-head">
+        <div>
+          <span class="p-eyebrow">Collections</span>
+          <h2>Rent cheques &amp; payments</h2>
+        </div>
+        <span class="p-head-sub">Every post-dated cheque &amp; transfer in one place</span>
+      </div>
+
+      <div class="p-kpis">
+        <div class="p-kpi"><span>Due (Oct–Nov)</span><b>AED 142,000</b></div>
+        <div class="p-kpi"><span>Collected</span><b style="color:var(--ok)">AED ${colAmt.toLocaleString('en-US')} (${colPct}%)</b></div>
+        <div class="p-kpi"><span>Bounced cheque</span><b style="color:var(--bad)">AED 16,250</b></div>
+      </div>
+
+      <section class="p-card">
+        <div class="table-wrap">
+          <table class="pt">
+            <thead>
+              <tr><th>Due</th><th>Tenant</th><th>Method</th><th class="r">Amount</th><th>Status</th><th class="r">Action</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">01 NOV</td>
+                <td><b>Priya Sharma</b> <span class="mono" style="color:var(--p-muted)">MV-0204</span></td>
+                <td>Cheque #510030 · FAB</td>
+                <td class="r mono">AED 19,000</td>
+                <td><span class="chip info">Held</span></td>
+                <td class="r">${S.reminded.priya ? '<span class="chip ok">✓ Sent</span>' : '<button type="button" class="pbtn pri glow" data-act="rem-priya">Remind</button>'}</td>
+              </tr>
+              <tr>
+                <td class="mono">19 OCT</td>
+                <td><b>Karim Bakr</b> <span class="mono" style="color:var(--p-muted)">MV-0201</span></td>
+                <td>Cheque #434481 · RAKBANK</td>
+                <td class="r mono">AED 16,250</td>
+                <td><span class="chip bad">Bounced</span></td>
+                <td class="r">${S.reminded.karim ? '<span class="chip ok">✓ Sent</span>' : '<button type="button" class="pbtn" data-act="rem-karim">Remind</button>'}</td>
+              </tr>
+              <tr class="${S.clearedAisha ? 'hi' : ''}">
+                <td class="mono">24 OCT</td>
+                <td><b>Aisha Rahman</b> <span class="mono" style="color:var(--p-muted)">MV-0302</span></td>
+                <td>Cheque #619004 · ENBD</td>
+                <td class="r mono">AED 22,500</td>
+                <td>${S.clearedAisha ? '<span class="chip ok">Cleared</span>' : '<span class="chip warn">Deposited</span>'}</td>
+                <td class="r">${S.clearedAisha ? '—' : '<button type="button" class="pbtn" data-act="clear-aisha">Mark cleared</button>'}</td>
+              </tr>
+              <tr>
+                <td class="mono">15 OCT</td>
+                <td><b>Elena Rossi</b> <span class="mono" style="color:var(--p-muted)">MV-0501</span></td>
+                <td>Cheque #771204 · ADCB</td>
+                <td class="r mono">AED 38,000</td>
+                <td><span class="chip ok">Cleared</span></td>
+                <td class="r">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }
+
+  function vInbox() {
+    const cur = S.activeThread;
+    const th = S.threads[cur];
+    th.unread = false;
+
+    return `
+      <div class="p-head">
+        <div>
+          <span class="p-eyebrow">Inbox</span>
+          <h2>Direct resident messages</h2>
+        </div>
+        <span class="p-head-sub">Messages arrive in the resident’s MyC app</span>
+      </div>
+
+      <div class="p-inbox">
+        <div class="ib-threads">
+          ${Object.entries(S.threads).map(([uid, t]) => {
+            const last = t.msgs[t.msgs.length - 1];
+            return `
+              <button type="button" class="ib-th ${uid === cur ? 'cur' : ''}" data-act="pick-thread" data-u="${uid}">
+                <div class="ib-th-top">
+                  <b>${esc(t.name)}</b>
+                  ${t.unread ? '<span class="u-dot"></span>' : `<span class="mono" style="font-size:10px;color:var(--p-muted)">${uid.slice(3)}</span>`}
+                </div>
+                <small>${esc((last.from === 'm' ? 'You: ' : '') + last.text)}</small>
+              </button>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="ib-chat">
+          <div class="ib-head">
+            <div><b>${esc(th.name)}</b> · <span class="mono">${cur}</span></div>
+            <span style="color:var(--p-muted)">${esc(th.meta)}</span>
+          </div>
+          <div class="ib-msgs">
+            ${th.msgs.map(m => `
+              <div class="p-msg ${m.from}">
+                ${esc(m.text)}
+                <small>${m.from === 'm' ? 'Management · ' : ''}${esc(m.at)}</small>
+              </div>
+            `).join('')}
+          </div>
+          <form class="ib-foot" id="ib-form">
+            <div class="ib-chips">
+              <button type="button" class="ib-chip" data-act="tpl" data-txt="Friendly reminder: your upcoming rent payment is due next week.">+ Payment reminder</button>
+              <button type="button" class="ib-chip" data-act="tpl" data-txt="Water tank cleaning is scheduled Tuesday 10am–1pm.">+ Tank notice</button>
+              <button type="button" class="ib-chip" data-act="tpl" data-txt="Happy to renew at the same rent — we’ll prepare the Tawtheeq today.">+ Renewal reply</button>
+            </div>
+            <div class="ib-send-row">
+              <input type="text" id="ib-input" placeholder="Message ${esc(th.name.split(' ')[0])} in MyC…">
+              <button type="submit" class="pbtn pri">Send</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
+  function vMaint() {
+    return `
+      <div class="p-head">
+        <div>
+          <span class="p-eyebrow">Maintenance</span>
+          <h2>Tickets &amp; vendor dispatch</h2>
+        </div>
+        <span class="p-head-sub">Avg time to close: <b>1.8 days</b></span>
+      </div>
+
+      ${!S.acReported ? `
+        <div class="p-card" style="flex-direction:row;align-items:center;justify-content:space-between;background:#FBF7F0;border-color:#E5CEB0">
+          <span style="font-size:13px"><b>Try it:</b> Tap <b>“Submit Report”</b> on the MyC phone (right) to send a new AC issue here.</span>
+        </div>
+      ` : ''}
+
+      <section class="p-card">
+        <div class="table-wrap">
+          <table class="pt">
+            <thead>
+              <tr><th>Ticket</th><th>Issue &amp; Unit</th><th>Asset / Vendor</th><th>Status</th><th class="r">Action</th></tr>
+            </thead>
+            <tbody>
+              ${S.acReported ? `
+                <tr class="hi">
+                  <td class="mono">T-1048</td>
+                  <td><b>AC not cooling in living room</b><br><span style="font-size:11.5px;color:var(--p-muted)">MV-0402 · 📷 Photo attached</span></td>
+                  <td>Daikin Split AC<br><span style="font-size:11.5px;color:var(--p-muted)">CoolTech Services</span></td>
+                  <td>${S.acAssigned ? '<span class="chip warn">Assigned</span>' : '<span class="chip bad">New</span>'}</td>
+                  <td class="r">${S.acAssigned ? '<span class="chip ok">✓ Sent on WhatsApp</span>' : '<button type="button" class="pbtn wa glow" data-act="wa-vendor">WhatsApp vendor</button>'}</td>
+                </tr>
+              ` : ''}
+              <tr>
+                <td class="mono">T-1045</td>
+                <td><b>Lift 2 faint grinding noise</b><br><span style="font-size:11.5px;color:var(--p-muted)">Common area</span></td>
+                <td>Lift 2 · Schindler</td>
+                <td><span class="chip warn">In progress</span></td>
+                <td class="r"><span class="mono" style="font-size:11.5px;color:var(--p-muted)">1d ago</span></td>
+              </tr>
+              <tr>
+                <td class="mono">T-1042</td>
+                <td><b>Kitchen sink mixer tap drip</b><br><span style="font-size:11.5px;color:var(--p-muted)">MV-0104 · Priya Nair</span></td>
+                <td>Plumbing · HomeFix</td>
+                <td><span class="chip ok">Resolved</span></td>
+                <td class="r"><span class="mono" style="font-size:11.5px;color:var(--p-muted)">Closed in 1d</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }
+
+  function vAssets() {
+    return `
+      <div class="p-head">
+        <div>
+          <span class="p-eyebrow">Assets &amp; Vendors</span>
+          <h2>Building &amp; apartment assets</h2>
+        </div>
+        <span class="p-head-sub">Track warranties, service intervals &amp; preferred contractors</span>
+      </div>
+
+      <div class="p-kpis">
+        <div class="p-kpi"><span>Tracked assets</span><b>42</b></div>
+        <div class="p-kpi"><span>Service overdue</span><b style="color:${S.acServiced ? 'var(--ok)' : 'var(--bad)'}">${S.acServiced ? '0' : '1'}</b></div>
+        <div class="p-kpi"><span>Active vendors</span><b>4</b></div>
+      </div>
+
+      <section class="p-card">
+        <div class="table-wrap">
+          <table class="pt">
+            <thead>
+              <tr><th>Asset</th><th>Location</th><th>Warranty</th><th>Next service</th><th>Vendor</th><th class="r">Action</th></tr>
+            </thead>
+            <tbody>
+              <tr class="${S.acServiced ? 'hi' : ''}">
+                <td><b>Split AC, living room</b><br><span style="font-size:11px;color:var(--p-muted)">Daikin · 2023</span></td>
+                <td class="mono">MV-0402</td>
+                <td>Until 2028</td>
+                <td>${S.acServiced ? '<span class="chip ok">Apr 2027</span>' : '<span class="chip bad">Overdue · 12 Oct</span>'}</td>
+                <td>CoolTech</td>
+                <td class="r">${S.acServiced ? '<span class="mono" style="color:var(--ok)">✓ Logged</span>' : '<button type="button" class="pbtn" data-act="service-ac">Log service</button>'}</td>
+              </tr>
+              <tr>
+                <td><b>Passenger Lift 1</b><br><span style="font-size:11px;color:var(--p-muted)">Schindler · 2021</span></td>
+                <td>Common area</td>
+                <td>Until 2031</td>
+                <td><span class="chip ok">18 Nov 2026</span></td>
+                <td>Schindler</td>
+                <td class="r">—</td>
+              </tr>
+              <tr>
+                <td><b>Booster pump set</b><br><span style="font-size:11px;color:var(--p-muted)">Grundfos · 2022</span></td>
+                <td>Roof plant</td>
+                <td>Until 2027</td>
+                <td><span class="chip warn">Due in 7d</span></td>
+                <td>AquaFlow</td>
+                <td class="r">—</td>
+              </tr>
+              <tr>
+                <td><b>Water heater</b><br><span style="font-size:11px;color:var(--p-muted)">Ariston · 2023</span></td>
+                <td class="mono">MV-0204</td>
+                <td>Until 2028</td>
+                <td><span class="chip ok">04 Mar 2027</span></td>
+                <td>HomeFix</td>
+                <td class="r">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }
+
+  const RTABS = [
+    ['aging', 'Aging'],
+    ['cash', 'Cash flow'],
+    ['roll', 'Rent roll'],
+    ['occ', 'Occupancy'],
+    ['eff', 'Collection rate'],
+    ['profit', 'Profit by property'],
+    ['import', 'Bank statement import']
+  ];
+
+  function vReports() {
+    const rt = S.rtab;
+    const title = (RTABS.find(x => x[0] === rt) || RTABS[0])[1];
+    let body = '';
+
+    if (rt === 'aging') {
+      body = `
+        <div class="p-card-hd"><h3>Receivables aging · tenants</h3><span>open amounts in AED, by days past due</span></div>
+        <div class="table-wrap">
+          <table class="pt">
+            <thead><tr><th>Building</th><th class="r">Not yet due</th><th class="r">Awaiting clearance</th><th class="r">1–30 days</th><th class="r">31–60</th><th class="r">Total overdue</th></tr></thead>
+            <tbody>
+              <tr><td><b>Marina View Tower</b></td><td class="r mono">521,400</td><td class="r mono">22,500</td><td class="r mono" style="color:var(--bad)">16,250</td><td class="r mono">—</td><td class="r mono" style="color:var(--bad);font-weight:600">16,250</td></tr>
+              <tr><td><b>Reem Gate Residence</b></td><td class="r mono">409,500</td><td class="r mono">—</td><td class="r mono" style="color:var(--bad)">12,375</td><td class="r mono">—</td><td class="r mono" style="color:var(--bad);font-weight:600">12,375</td></tr>
+              <tr><td><b>Corniche Court</b></td><td class="r mono">318,000</td><td class="r mono">—</td><td class="r mono">—</td><td class="r mono">—</td><td class="r mono" style="color:var(--ok)">0</td></tr>
+              <tr><td><b>Total</b></td><td class="r mono"><b>1,248,900</b></td><td class="r mono"><b>22,500</b></td><td class="r mono"><b style="color:var(--bad)">28,625</b></td><td class="r mono"><b>0</b></td><td class="r mono"><b style="color:var(--bad)">28,625</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else if (rt === 'cash') {
+      const mos = [['Nov', 265, 165], ['Dec', 310, 415], ['Jan', 240, 0], ['Feb', 285, 165], ['Mar', 255, 415], ['Apr', 295, 0]];
+      body = `
+        <div class="p-card-hd">
+          <h3>Next 6 months</h3>
+          <span style="display:inline-flex;gap:12px">
+            <span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--p-navy);margin-right:4px"></i>Cash in</span>
+            <span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#E0A84A;margin-right:4px"></i>Cash out</span>
+          </span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:end;height:145px;padding:12px 6px 4px;border-bottom:1px solid var(--p-rule)">
+          ${mos.map(([m, inn, out]) => `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end">
+              <div style="display:flex;align-items:flex-end;gap:3px;height:105px">
+                <div title="${m} in: AED ${inn}K" style="width:16px;height:${Math.round(inn / 4.2)}%;background:var(--p-navy);border-radius:3px 3px 0 0"></div>
+                <div title="${m} out: AED ${out}K" style="width:16px;height:${Math.max(2, Math.round(out / 4.2))}%;background:#E0A84A;border-radius:3px 3px 0 0"></div>
+              </div>
+              <span class="mono" style="font-size:10.5px;color:var(--p-muted)">${m.toUpperCase()}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--p-muted)">
+          <span>6-mo Cash in: <b class="mono" style="color:var(--p-ink)">AED 1,650,000</b></span>
+          <span>Cash out: <b class="mono" style="color:var(--p-ink)">AED 1,160,000</b></span>
+          <span>Net: <b class="mono" style="color:var(--ok)">+AED 490,000</b></span>
+        </div>
+      `;
+    } else if (rt === 'roll') {
+      body = `
+        <div class="p-card-hd"><h3>Rent roll · Marina View Tower</h3><span>sample units · exportable as CSV</span></div>
+        <div class="table-wrap">
+          <table class="pt">
+            <thead><tr><th>Unit</th><th>Type</th><th>Tenant</th><th class="r">Annual rent</th><th>Plan</th><th>Tawtheeq end</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">MV-0204</td><td>1 BR</td><td><b>Priya Sharma</b></td><td class="r mono">76,000</td><td>4 × cheque</td><td class="mono">14 Feb 2027</td><td><span class="chip warn">Due soon</span></td></tr>
+              <tr><td class="mono">MV-0201</td><td>1 BR</td><td><b>Karim Bakr</b></td><td class="r mono">65,000</td><td>4 × cheque</td><td class="mono">01 Apr 2027</td><td><span class="chip bad">Bounced</span></td></tr>
+              <tr><td class="mono">MV-0501</td><td>1 BR</td><td><b>Elena Rossi</b></td><td class="r mono">76,000</td><td>2 × cheque</td><td class="mono">13 Nov 2026</td><td><span class="chip ok">Paid up</span></td></tr>
+              <tr><td class="mono">MV-0804</td><td>2 BR</td><td><span style="color:var(--p-muted)">—</span></td><td class="r mono">—</td><td>—</td><td class="mono">—</td><td><span class="chip plain">Vacant</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else if (rt === 'occ') {
+      const rows = [['Marina View Tower', '8/8', '15/16', '7/8', '30/32', 94], ['Reem Gate Residence', '6/6', '11/12', '5/6', '22/24', 92], ['Corniche Court', '5/5', '10/10', '4/5', '19/20', 95]];
+      body = `
+        <div class="p-card-hd"><h3>By building &amp; unit type</h3><span>71 of 76 units let (93%)</span></div>
+        <div class="table-wrap">
+          <table class="pt">
+            <thead><tr><th>Building</th><th class="r">Studio</th><th class="r">1 BR</th><th class="r">2 BR</th><th class="r">Let</th><th>Occupancy</th></tr></thead>
+            <tbody>
+              ${rows.map(([b, s, o1, o2, l, p]) => `
+                <tr>
+                  <td><b>${b}</b></td><td class="r mono">${s}</td><td class="r mono">${o1}</td><td class="r mono">${o2}</td><td class="r mono">${l}</td>
+                  <td><div style="display:flex;align-items:center;gap:8px"><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div><span class="mono">${p}%</span></div></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else if (rt === 'eff') {
+      const rows = [['Marina View Tower', [98, 100, 96, 98, 92]], ['Reem Gate Residence', [100, 97, 100, 95, 94]], ['Corniche Court', [100, 100, 100, 100, 100]]];
+      const col = v => v >= 98 ? 'var(--ok)' : v >= 94 ? 'var(--warn)' : 'var(--bad)';
+      body = `
+        <div class="p-card-hd"><h3>Collected as % of billed</h3><span>installments due each month</span></div>
+        <div class="table-wrap">
+          <table class="pt">
+            <thead><tr><th>Building</th><th class="r">Jun</th><th class="r">Jul</th><th class="r">Aug</th><th class="r">Sep</th><th class="r">Oct</th></tr></thead>
+            <tbody>
+              ${rows.map(([b, vs]) => `<tr><td><b>${b}</b></td>${vs.map(v => `<td class="r mono" style="font-weight:600;color:${col(v)}">${v}%</td>`).join('')}</tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else if (rt === 'profit') {
+      body = `
+        <div class="p-card-hd"><h3>Margin by building</h3><span>annual tenant rent minus annual landlord rent</span></div>
+        <div class="table-wrap">
+          <table class="pt">
+            <thead><tr><th>Building</th><th class="r">Tenant rent</th><th class="r">Landlord rent</th><th class="r">Margin</th><th class="r">Margin %</th></tr></thead>
+            <tbody>
+              <tr><td><b>Marina View Tower</b></td><td class="r mono">2,290,000</td><td class="r mono">1,665,000</td><td class="r mono" style="color:var(--ok)">625,000</td><td class="r mono">27%</td></tr>
+              <tr><td><b>Reem Gate Residence</b></td><td class="r mono">1,680,000</td><td class="r mono">1,260,000</td><td class="r mono" style="color:var(--ok)">420,000</td><td class="r mono">25%</td></tr>
+              <tr><td><b>Corniche Court</b></td><td class="r mono">1,416,000</td><td class="r mono">1,125,500</td><td class="r mono" style="color:var(--ok)">290,500</td><td class="r mono">21%</td></tr>
+              <tr><td><b>Total</b></td><td class="r mono"><b>5,386,000</b></td><td class="r mono"><b>4,050,500</b></td><td class="r mono"><b style="color:var(--ok)">1,335,500</b></td><td class="r mono"><b>25%</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else {
+      body = `
+        <div class="p-card-hd">
+          <h3>Bank statement CSV auto-match</h3>
+          ${S.stmtApplied ? '<span class="chip ok">✓ 3 matches applied</span>' : '<button type="button" class="pbtn pri" data-act="apply-stmt">Apply 3 matches</button>'}
+        </div>
+        <div class="table-wrap">
+          <table class="pt">
+            <thead><tr><th>Date</th><th>Statement line</th><th class="r">Amount</th><th>Matched to</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr class="${S.stmtApplied ? 'hi' : ''}"><td class="mono">25 OCT</td><td class="mono">CHQ DEP 619004 MV-0302</td><td class="r mono">22,500</td><td>Aisha Rahman · MV-0302</td><td><span class="chip ok">${S.stmtApplied ? 'Cleared' : 'Mark cleared'}</span></td></tr>
+              <tr class="${S.stmtApplied ? 'hi' : ''}"><td class="mono">22 OCT</td><td class="mono">RETURNED CHQ 434481</td><td class="r mono" style="color:var(--bad)">−16,250</td><td>Karim Bakr · MV-0201</td><td><span class="chip bad">${S.stmtApplied ? 'Bounced' : 'Mark bounced'}</span></td></tr>
+              <tr class="${S.stmtApplied ? 'hi' : ''}"><td class="mono">26 OCT</td><td class="mono">IPI TRF OMAR HADDAD MV-0601</td><td class="r mono">16,250</td><td>Omar Haddad · MV-0601</td><td><span class="chip ok">${S.stmtApplied ? 'Paid' : 'Mark paid'}</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="p-head">
+        <div>
+          <span class="p-eyebrow">Reports</span>
+          <h2>${esc(title)}</h2>
+        </div>
+      </div>
+
+      <div class="subtabs" role="tablist" aria-label="Report types">
+        ${RTABS.map(([k, l]) => `<button type="button" role="tab" aria-selected="${rt === k}" class="${rt === k ? 'on' : ''}" data-rtab="${k}">${esc(l)}</button>`).join('')}
+      </div>
+
+      <section class="p-card">${body}</section>
+    `;
+  }
+
+  /* ---------- MyC Resident Phone Renderer ---------- */
+  function renderPhone() {
+    const body = document.getElementById('m-body');
+    const tabs = document.getElementById('m-tabs');
+    const mode = S.phoneMode;
+
+    if (mode === 'signup') {
+      tabs.hidden = true;
+      body.innerHTML = `
+        <div class="m-head">
+          <div class="m-mark"><span class="m-box">m</span><span class="m-bname">Join Your Building</span></div>
+        </div>
+        <div class="m-hero">Marina View <em>Tower</em></div>
+        <p style="font-family:var(--news);font-size:12px;color:#7A6F62">Residents search their building and join in seconds — no approval bottleneck.</p>
+        <div class="m-card">
+          <input class="m-input" value="Daniel Okafor" readonly aria-label="Resident name">
+          <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:6px">
+            <input class="m-input" value="Apt 0402" readonly aria-label="Apartment">
+            <input class="m-input" value="+971 50 412 7789" readonly aria-label="Phone">
+          </div>
+        </div>
+        <button type="button" class="m-btn glow" data-act="join-myc">Join Marina View Tower</button>
+      `;
+      return;
+    }
+
+    tabs.hidden = false;
+    const activeTab = mode === 'market' ? 'market' : mode === 'events' ? 'events' : mode === 'maint' ? 'maint' : 'home';
+    tabs.innerHTML = `
+      <button type="button" class="m-tab ${activeTab === 'home' ? 'on' : ''}" data-ptab="home"><span>⌂</span><span>Home</span></button>
+      <button type="button" class="m-tab ${activeTab === 'market' ? 'on' : ''}" data-ptab="market"><span>🛍</span><span>Market</span></button>
+      <button type="button" class="m-tab" data-ptab="maint" aria-label="Report maintenance"><span class="m-fab">🔧</span><span style="color:var(--accent);font-weight:600">Maint.</span></button>
+      <button type="button" class="m-tab ${activeTab === 'events' ? 'on' : ''}" data-ptab="events"><span>📅</span><span>Events</span></button>
+      <button type="button" class="m-tab" data-ptab="signup"><span>＋</span><span>Join</span></button>
+    `;
+
+    if (mode === 'maint') {
+      body.innerHTML = !S.acReported ? `
+        <div class="m-head">
+          <div class="m-mark"><span class="m-box">m</span><span class="m-bname">Maintenance · Apt 0402</span></div>
+        </div>
+        <div class="m-hero">Report an <em>issue.</em></div>
+        <div class="m-card">
+          <div style="font-size:13.5px">AC not cooling in living room</div>
+          <div style="font-size:11.5px;color:var(--ok)">📷 Photo attached</div>
+        </div>
+        <button type="button" class="m-btn glow" data-act="submit-maint">Submit Report</button>
+      ` : `
+        <div class="m-head">
+          <div class="m-mark"><span class="m-box">m</span><span class="m-bname">My Maintenance</span></div>
+          <span class="mono" style="font-size:10px;color:#7A6F62">#T-1048</span>
+        </div>
+        <div class="m-hero">${S.acAssigned ? 'Contractor <em>assigned.</em>' : 'Report <em>logged.</em>'}</div>
+        <div class="m-card">
+          <div style="font-size:13.5px;font-weight:500">AC not cooling in living room</div>
+          <div style="font-size:12px;color:${S.acAssigned ? 'var(--ok)' : '#7A6F62'}">
+            ${S.acAssigned ? '✓ CoolTech Services assigned · Visiting today' : 'Sent to building management…'}
+          </div>
+        </div>
+      `;
+    } else if (mode === 'chat') {
+      const th = S.threads[S.phoneUnit] || S.threads['MV-0204'];
+      const firstName = th.name.split(' ')[0];
+      const recent = th.msgs.slice(-3);
+      body.innerHTML = `
+        <div class="m-head" style="border-bottom:1px solid #D9CFBE;padding-bottom:7px">
+          <div class="m-mark"><span class="m-box">m</span><span class="m-bname">Building Management</span></div>
+          <span class="mono" style="font-size:10px;color:#7A6F62">${S.phoneUnit}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px;flex:1">
+          ${recent.map(x => `
+            <div class="m-bub ${x.from === 'm' ? 'in' : 'out'}">
+              ${x.tag ? `<span class="m-eye" style="display:block;margin-bottom:2px">${esc(x.tag)}</span>` : ''}
+              ${esc(x.text)}
+            </div>
+          `).join('')}
+        </div>
+        <button type="button" class="m-btn" data-act="phone-reply">Reply as ${esc(firstName)}: “Thanks, noted!”</button>
+      `;
+    } else if (mode === 'market') {
+      body.innerHTML = `
+        <div class="m-head"><div class="m-mark"><span class="m-box">m</span><span class="m-bname">Neighbour Market</span></div></div>
+        <div class="m-hero">In your <em>building.</em></div>
+        <div class="m-card"><div style="display:flex;justify-content:space-between"><b>Walnut Coffee Table</b><span class="mono" style="color:var(--accent)">AED 250</span></div><span style="font-size:11.5px;color:#7A6F62">James W. · Apt 0703</span></div>
+        <div class="m-card"><div style="display:flex;justify-content:space-between"><b>Nespresso Machine</b><span class="mono" style="color:var(--accent)">AED 180</span></div><span style="font-size:11.5px;color:#7A6F62">Hana K. · Apt 0304</span></div>
+      `;
+    } else if (mode === 'events') {
+      body.innerHTML = `
+        <div class="m-head"><div class="m-mark"><span class="m-box">m</span><span class="m-bname">Building Events</span></div></div>
+        <div class="m-hero">This <em>week.</em></div>
+        <div class="m-card"><span class="m-eye">Sat · 9:00 AM · Podium</span><b>Kids Playdate &amp; Coffee</b><span style="font-size:11.5px;color:#7A6F62">11 neighbours going</span></div>
+      `;
+    } else {
+      body.innerHTML = `
+        <div class="m-head">
+          <div class="m-mark"><span class="m-box">m</span><span class="m-bname">Marina View Tower</span></div>
+          <button type="button" class="m-pill" data-act="open-phone-chat">Messages</button>
+        </div>
+        <div>
+          <div class="m-hero">Hello, <em>${esc(S.phoneWho)}.</em></div>
+          <div class="m-meta"><i>●</i>Verified resident · Apt ${esc(S.phoneUnit.slice(3))}</div>
+        </div>
+        <div class="m-sec"><span>Building notices</span></div>
+        <div class="m-notice">
+          <span class="m-eye">Building Notice</span>
+          <h4>Water tank cleaning</h4>
+          <p>Water supply paused briefly Tuesday 10am–1pm for scheduled cleaning.</p>
+        </div>
+        <div class="m-sec"><span>From neighbours</span></div>
+        <div class="m-card" style="padding:9px 11px">
+          <span style="font-size:11px;color:#7A6F62">Aisha R. (Apt 0601) · 2h ago</span>
+          <div style="font-size:12.5px">Anyone recommend a reliable curtain tailor on Reem Island?</div>
+        </div>
+      `;
+    }
+  }
+
+  function renderAll() {
+    renderNav();
+    const pm = document.getElementById('p-main');
+    if (view === 'overview') pm.innerHTML = vOverview();
+    else if (view === 'residents') pm.innerHTML = vResidents();
+    else if (view === 'collections') pm.innerHTML = vCollections();
+    else if (view === 'inbox') pm.innerHTML = vInbox();
+    else if (view === 'maintenance') pm.innerHTML = vMaint();
+    else if (view === 'assets') pm.innerHTML = vAssets();
+    else pm.innerHTML = vReports();
+    renderPhone();
+  }
+
+  function sendReminderTo(unit, fullName, tag, text, meta) {
+    if (!S.threads[unit]) {
+      S.threads[unit] = { name: fullName, meta: meta || unit, unread: false, msgs: [] };
+    }
+    S.threads[unit].msgs.push({ from: 'm', text, at: 'Just now', tag });
+    S.phoneUnit = unit;
+    S.phoneWho = fullName.split(' ')[0];
+    S.phoneMode = 'chat';
+    pulse('→', 'Sent to MyC');
+    renderAll();
+    showPush(tag, text);
+  }
+
+  /* ---------- Interactions ---------- */
+  document.addEventListener('click', e => {
+    const navBtn = e.target.closest('[data-nav]');
+    if (navBtn) {
+      view = navBtn.dataset.nav;
+      if (view === 'residents' && !S.danielJoined) S.phoneMode = 'signup';
+      else if (view === 'maintenance') S.phoneMode = 'maint';
+      else if (view === 'inbox') { S.phoneUnit = S.activeThread; S.phoneMode = 'chat'; }
+      else if (S.phoneMode === 'signup' || S.phoneMode === 'maint') S.phoneMode = 'home';
+      renderAll();
+      return;
+    }
+
+    const ptab = e.target.closest('[data-ptab]');
+    if (ptab) {
+      const t = ptab.dataset.ptab;
+      S.phoneMode = t;
+      if (t === 'maint') view = 'maintenance';
+      if (t === 'signup') { S.danielJoined = false; view = 'residents'; }
+      renderAll();
+      return;
+    }
+
+    const rtab = e.target.closest('[data-rtab]');
+    if (rtab) {
+      S.rtab = rtab.dataset.rtab;
+      renderAll();
+      return;
+    }
+
+    const actBtn = e.target.closest('[data-act]');
+    if (!actBtn) return;
+    const act = actBtn.dataset.act;
+
+    if (act === 'rem-priya') {
+      S.reminded.priya = true;
+      sendReminderTo('MV-0204', 'Priya Sharma', 'Rent Reminder', 'Cheque #510030 for AED 19,000 is due on 1 Nov.');
+    } else if (act === 'rem-omar') {
+      S.reminded.omar = true;
+      sendReminderTo('MV-0601', 'Omar Haddad', 'Rent Reminder', 'Bank transfer of AED 16,250 is due on 3 Nov.', 'AED 65,000 / yr · Bank transfer');
+    } else if (act === 'rem-elena') {
+      S.reminded.elena = true;
+      sendReminderTo('MV-0501', 'Elena Rossi', 'Renewal Reminder', 'Your Tawtheeq ends on 13 Nov (18 days). Let us know if renewing.');
+    } else if (act === 'rem-karim') {
+      S.reminded.karim = true;
+      sendReminderTo('MV-0201', 'Karim Bakr', 'Returned Cheque', 'Please replace returned cheque #434481 (AED 16,250).');
+    } else if (act === 'clear-aisha') {
+      S.clearedAisha = true;
+      renderAll();
+    } else if (act === 'join-myc') {
+      S.danielJoined = true;
+      S.phoneWho = 'Daniel';
+      S.phoneUnit = 'MV-0402';
+      S.phoneMode = 'home';
+      view = 'residents';
+      pulse('←', 'Joined');
+      renderAll();
+      showPush('Welcome to Marina View', 'Apt 0402 connected');
+    } else if (act === 'contract-daniel') {
+      S.danielContracted = true;
+      pulse('→', 'Linked');
+      renderAll();
+      showPush('Tenancy active', 'Contract linked to Apt 0402');
+    } else if (act === 'contract-ola') {
+      S.olaContracted = true;
+      renderAll();
+    } else if (act === 'chat-unit' || act === 'pick-thread') {
+      const u = actBtn.dataset.u;
+      S.activeThread = u;
+      S.phoneUnit = u;
+      S.phoneMode = 'chat';
+      view = 'inbox';
+      renderAll();
+    } else if (act === 'open-phone-chat') {
+      S.phoneMode = 'chat';
+      view = 'inbox';
+      S.activeThread = S.phoneUnit in S.threads ? S.phoneUnit : 'MV-0204';
+      S.phoneUnit = S.activeThread;
+      renderAll();
+    } else if (act === 'tpl') {
+      const inp = document.getElementById('ib-input');
+      if (inp) { inp.value = actBtn.dataset.txt; inp.focus(); }
+    } else if (act === 'phone-reply') {
+      const u = S.phoneUnit;
+      if (S.threads[u]) {
+        S.threads[u].msgs.push({ from: 't', text: 'Thanks, noted!', at: 'Just now' });
+        if (view !== 'inbox') S.threads[u].unread = true;
+      }
+      pulse('←', 'Reply');
+      renderAll();
+    } else if (act === 'submit-maint') {
+      S.acReported = true;
+      view = 'maintenance';
+      pulse('←', 'Ticket #1048');
+      renderAll();
+    } else if (act === 'wa-vendor') {
+      S.acAssigned = true;
+      S.phoneMode = 'maint';
+      pulse('→', 'Assigned');
+      renderAll();
+      showPush('Maintenance update', 'CoolTech Services assigned');
+    } else if (act === 'service-ac') {
+      S.acServiced = true;
+      renderAll();
+    } else if (act === 'apply-stmt') {
+      S.stmtApplied = true;
+      S.clearedAisha = true;
+      renderAll();
+    }
+  });
+
+  document.addEventListener('submit', e => {
+    if (e.target.id === 'ib-form') {
+      e.preventDefault();
+      const inp = document.getElementById('ib-input');
+      const txt = inp ? inp.value.trim() : '';
+      if (!txt) return;
+      const u = S.activeThread;
+      S.threads[u].msgs.push({ from: 'm', text: txt, at: 'Just now' });
+      S.phoneUnit = u;
+      S.phoneMode = 'chat';
+      pulse('→', 'Delivered');
+      renderAll();
+      showPush('Building Management', txt);
+    }
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    S = seedState();
+    view = 'overview';
+    document.getElementById('push-slot').innerHTML = '';
+    renderAll();
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
