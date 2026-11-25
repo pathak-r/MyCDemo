@@ -1698,5 +1698,151 @@ function init(){seed();sel.clear();stmt=null;imp=null;drafts={};typing=null;
   $('phone').hidden=true;render();}
 init();
 </script>
+<!-- ===== Guided tour (added on top of the demo; remove this block to disable) ===== -->
+<style>
+.tour-shade{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.62);animation:tfade .2s ease-out}
+.tour-hole{position:fixed;z-index:81;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.62),0 0 0 3px #F0A77F;pointer-events:none;transition:all .28s ease}
+.tour-block{position:fixed;inset:0;z-index:82}
+.tour-card,.tour-welcome{--t-bg:#FFFDF8;--t-ink:#1F1B17;--t-ink2:#4A423B;--t-rule:#E8DFD2;--t-btn:#1F1B17;--t-hover:#F3ECE1;color-scheme:light}
+.tour-card{position:fixed;z-index:83;width:360px;max-width:calc(100vw - 24px);background:var(--t-bg);color:var(--t-ink);border:1px solid #F0A77F;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.32);padding:20px 20px 16px;font-family:var(--sans);transition:top .28s ease,left .28s ease;animation:tfade .2s ease-out}
+.tour-card .t-step{font:600 11px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:#B4442A;margin-bottom:8px}
+.tour-card h3{margin:0 0 8px;font:600 19px/1.25 var(--serif);letter-spacing:-.01em}
+.tour-card p{margin:0;color:var(--t-ink2);font-size:14px;line-height:1.55}
+.tour-card .t-bar{display:flex;gap:4px;margin:16px 0 14px}
+.tour-card .t-bar i{flex:1;height:3px;border-radius:2px;background:var(--t-rule)}
+.tour-card .t-bar i.on{background:#B4442A}
+.tour-card .t-btns{display:flex;align-items:center;gap:8px}
+.tour-card .t-btns .sp{flex:1}
+.tour-btn{font:600 13.5px var(--sans);min-height:40px;padding:0 16px;border-radius:9px;border:1px solid #D8CCBB;background:transparent;color:var(--t-ink);cursor:pointer}
+.tour-btn:hover{background:var(--t-hover)}
+.tour-btn.pri{background:#B4442A;color:#fff;border-color:#B4442A}
+.tour-btn.pri:hover{filter:brightness(1.15)}
+.tour-btn.link{border:0;background:none;color:#6A5E54;padding:0 6px}
+.tour-btn:focus-visible{outline:2px solid #1F4FBF;outline-offset:2px}
+.tour-welcome{position:fixed;z-index:83;left:50%;top:50%;transform:translate(-50%,-50%);width:480px;max-width:calc(100vw - 24px);background:var(--t-bg);color:var(--t-ink);border:1px solid #F0A77F;border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.35);padding:30px 30px 24px;font-family:var(--sans);animation:tfade .25s ease-out}
+.tour-welcome .eyebrow{font:600 11px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:#B4442A}
+.tour-welcome h2{margin:10px 0 10px;font:600 28px/1.15 var(--serif);letter-spacing:-.02em}
+.tour-welcome p{margin:0 0 10px;color:var(--t-ink2);font-size:15px;line-height:1.55}
+.tour-welcome ul{margin:6px 0 18px;padding-left:18px;color:var(--t-ink2);font-size:14.5px;line-height:1.7}
+.tour-welcome .t-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.tour-welcome .pill{display:inline-block;margin:4px 0 14px;padding:6px 10px;border-radius:999px;background:#FBEFE6;color:#8A3218;font-size:12.5px;font-weight:600}
+.tour-launch{position:fixed;z-index:55;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:0;background:#B4442A;color:#fff;font:600 14px var(--sans);box-shadow:0 10px 30px rgba(0,0,0,.25);cursor:pointer}
+.tour-launch:hover{filter:brightness(1.08)}
+.tour-launch:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+/* links inside tour */
+.tour-welcome a{color:#A3471F}
+@keyframes tfade{from{opacity:0}to{opacity:1}}
+@media (max-width:720px){.tour-card{left:12px!important;right:12px;width:auto;top:auto!important;bottom:calc(12px + env(safe-area-inset-bottom,0px))}}
+@media (prefers-reduced-motion:reduce){.tour-hole,.tour-card{transition:none}.tour-shade,.tour-card,.tour-welcome{animation:none}}
+</style>
+<button type="button" class="tour-launch" id="tour-launch" hidden aria-label="Start the guided tour"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>Guided tour</button>
+<div id="tour-root"></div>
+<script>
+(function(){
+  const STEPS=[
+    {view:'overview',target:'#nav',title:'Everything in one place',
+     body:'The left menu holds the whole operation: rent and cheques, landlords and leases, residents, messages, maintenance, assets and reports, across all your buildings.'},
+    {view:'overview',target:'.grid2 > .card:nth-child(1)',title:'Your week at a glance',
+     body:'Every payment due this week, with the cheque number and status. Send a reminder to a resident with one click.'},
+    {view:'overview',target:'.grid2 > .card:nth-child(2)',title:'Contracts ending soon',
+     body:'Tawtheeq end dates are tracked for you. See who is renewing or moving out, and remind anyone you have not heard from.'},
+    {view:'collections',target:'#main .wrap section.card',title:'Rent cheques and payments',
+     body:'Track every cheque: held, deposited, cleared or bounced. Import a bank statement to update statuses in bulk.'},
+    {view:'collections',target:'#phone',title:'What the resident sees',
+     body:'When you press Remind, the reminder lands in the resident’s MyC app, on their phone. No WhatsApp groups, no lost messages.',
+     before:()=>{const b=document.querySelector('#main [data-action="remind"]');if(b)b.click();}},
+    {view:'maintenance',target:'#main .wrap section.card',title:'Maintenance, tracked',
+     body:'Residents report issues from the app. Each ticket shows the asset, vendor, priority and how long it has been open. Send a job to your vendor on WhatsApp in one tap.'},
+    {view:'inbox',target:'.inbox',title:'Talk to residents directly',
+     body:'Message the residents of any unit from your desk. They reply in the MyC app, and the conversation stays with the unit.'},
+    {view:'residents',target:'#main .wrap section.card',title:'Who is on MyC',
+     body:'See which residents have joined, unit by unit. Anyone in the apartment can sign up; contract holders are recognised automatically.'},
+    {view:'assets',target:'#main .wrap section.card',title:'Assets and service dates',
+     body:'Every AC, water heater and lift, with its warranty, last service and the next one due. Overdue services are flagged.'}
+  ];
+  const root=document.getElementById('tour-root'),launch=document.getElementById('tour-launch');
+  let i=-1,active=false,lastFocus=null;
+  const store={get(){try{return localStorage.getItem('myc-tour-seen')}catch(e){return null}},set(){try{localStorage.setItem('myc-tour-seen','1')}catch(e){}}};
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  function welcome(){
+    active=true;launch.hidden=true;lastFocus=document.activeElement;
+    root.innerHTML=`<div class="tour-shade"></div><div class="tour-welcome" role="dialog" aria-modal="true" aria-labelledby="tw-h">
+      <span class="eyebrow">MyCommunity UAE · Demo</span>
+      <h2 id="tw-h">See how it works in 2 minutes</h2>
+      <p>MyCommunity is one platform with two sides:</p>
+      <ul><li><b>Client Portal</b> for your management team</li><li><b>MyC app</b> for your residents, on their phones</li></ul>
+      <span class="pill">Pilot programme: free for life for our first 10 companies</span>
+      <div class="t-btns"><button type="button" class="tour-btn pri" data-t="start">Start the tour</button><button type="button" class="tour-btn" data-t="skip">Explore on my own</button></div>
+    </div>`;
+    root.querySelector('[data-t="start"]').focus();
+  }
+  function finish(){
+    active=true;launch.hidden=true;clearHole();
+    try{document.getElementById('phone').hidden=true;go('overview');}catch(e){}
+    root.innerHTML=`<div class="tour-shade"></div><div class="tour-welcome" role="dialog" aria-modal="true" aria-labelledby="tw-f">
+      <span class="eyebrow">That’s the tour</span>
+      <h2 id="tw-f">Now try it yourself</h2>
+      <p>Everything here is clickable demo data. Open a unit, send a reminder, assign a ticket. Use <b>Reset demo</b> in the menu to start fresh.</p>
+      <p>We’re taking <b>10 pilot companies</b>, free for life, in exchange for honest feedback.</p>
+      <p style="margin-bottom:18px"><a href="mailto:hello@mycommunityuae.com">hello@mycommunityuae.com</a></p>
+      <div class="t-btns"><button type="button" class="tour-btn pri" data-t="close">Explore the demo</button><button type="button" class="tour-btn" data-t="restart">Restart tour</button></div>
+    </div>`;
+    root.querySelector('[data-t="close"]').focus();
+  }
+  function clearHole(){const h=document.querySelector('.tour-hole');if(h)h.remove();}
+  function close(){
+    active=false;i=-1;store.set();root.innerHTML='';clearHole();launch.hidden=false;
+    window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);
+    if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}
+  }
+  function show(n){
+    if(n<0)n=0; if(n>=STEPS.length){finish();return;}
+    i=n;active=true;launch.hidden=true;const s=STEPS[n];
+    try{if(!(route&&route.name===s.view)||s.view==='collections')go(s.view);}catch(e){}
+    if(s.before)s.before();
+    const t=document.querySelector(s.target);
+    if(t&&s.target!=='#phone'&&s.target!=='#nav'){const r=t.getBoundingClientRect();if(r.top<0||r.top>window.innerHeight*0.5)t.scrollIntoView({block:'start'});}
+    root.innerHTML=`<div class="tour-block"></div><div class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tc-h" aria-describedby="tc-b">
+      <div class="t-step">Step ${n+1} of ${STEPS.length}</div>
+      <h3 id="tc-h">${esc(s.title)}</h3><p id="tc-b">${esc(s.body)}</p>
+      <div class="t-bar" aria-hidden="true">${STEPS.map((_,k)=>`<i class="${k<=n?'on':''}"></i>`).join('')}</div>
+      <div class="t-btns"><button type="button" class="tour-btn link" data-t="skip">Skip tour</button><span class="sp"></span>${n>0?'<button type="button" class="tour-btn" data-t="back">Back</button>':''}<button type="button" class="tour-btn pri" data-t="next">${n===STEPS.length-1?'Finish':'Next'}</button></div>
+    </div>`;
+    if(!document.querySelector('.tour-hole')){const h=document.createElement('div');h.className='tour-hole';document.body.appendChild(h);}
+    window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
+    place();setTimeout(place,60);
+    root.querySelector('[data-t="next"]').focus();
+  }
+  function place(){
+    if(i<0)return;const s=STEPS[i],t=document.querySelector(s.target),h=document.querySelector('.tour-hole'),c=root.querySelector('.tour-card');
+    if(!h||!c)return;const vw=window.innerWidth,vh=window.innerHeight,pad=8;
+    if(!t||t.hidden){h.style.cssText='top:50%;left:50%;width:0;height:0';c.style.top=(vh/2-100)+'px';c.style.left=(vw/2-180)+'px';return;}
+    const r=t.getBoundingClientRect();
+    const top=Math.max(8,r.top-pad),left=Math.max(8,r.left-pad),bottom=Math.min(vh-8,r.bottom+pad),right=Math.min(vw-8,r.right+pad);
+    h.style.top=top+'px';h.style.left=left+'px';h.style.width=Math.max(0,right-left)+'px';h.style.height=Math.max(0,bottom-top)+'px';
+    if(vw<=720)return;
+    const cw=c.offsetWidth,ch=c.offsetHeight,gap=16;let x,y;
+    if(vw-right>=cw+gap+8){x=right+gap;y=top;}
+    else if(left>=cw+gap+8){x=left-gap-cw;y=top;}
+    else if(vh-bottom>=ch+gap+8){x=left;y=bottom+gap;}
+    else if(top>=ch+gap+8){x=left;y=top-gap-ch;}
+    else{x=right-cw-16;y=bottom-ch-16;}
+    x=Math.min(Math.max(12,x),vw-cw-12);y=Math.min(Math.max(12,y),vh-ch-12);
+    c.style.left=x+'px';c.style.top=y+'px';
+  }
+  root.addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;const a=b.dataset.t;
+    if(a==='start'||a==='restart')show(0);else if(a==='next')show(i+1);else if(a==='back')show(i-1);else if(a==='skip'||a==='close'){if(a==='skip'&&i>=0){try{document.getElementById('phone').hidden=true}catch(e){}}close();}});
+  document.addEventListener('keydown',e=>{if(!active)return;
+    if(e.key==='Escape'){e.stopImmediatePropagation();close();}
+    else if(i>=0&&e.key==='ArrowRight')show(i+1);else if(i>=0&&e.key==='ArrowLeft'&&i>0)show(i-1);
+    else if(e.key==='Tab'){const f=[...root.querySelectorAll('button,a[href]')];if(!f.length)return;const k=f.indexOf(document.activeElement);
+      if(e.shiftKey&&k<=0){e.preventDefault();f[f.length-1].focus();}else if(!e.shiftKey&&k===f.length-1){e.preventDefault();f[0].focus();}}},true);
+  launch.addEventListener('click',()=>{lastFocus=launch;show(0);});
+  const force=/[?&]tour=1\b/.test(location.search);
+  if(force||!store.get())setTimeout(welcome,400);else launch.hidden=false;
+})();
+</script>
+<!-- ===== /Guided tour ===== -->
 </body>
 </html>
